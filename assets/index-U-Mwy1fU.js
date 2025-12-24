@@ -152,7 +152,7 @@ Keşfet • Fikir Üret • Prototiple • Uygula`},contact:{title:"Bize Ulaşı
             text-shadow: 0 4px 8px rgba(0,0,0,0.1);
             
             /* Mobile Default */
-            top: -220px; /* Moved up for 4 lines */
+            top: -180px; /* Moved down from -220px to be visible */
             font-size: 1rem;
             padding: 0 1rem;
         }
@@ -163,7 +163,7 @@ Keşfet • Fikir Üret • Prototiple • Uygula`},contact:{title:"Bize Ulaşı
            
            /* Desktop Override */
            .agency-title {
-               top: -340px; /* Moved up for 4 lines */
+               top: -260px; /* Moved down from -340px to be visible */
                font-size: 1.8rem;
            }
         }
