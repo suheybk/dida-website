@@ -1,13 +1,832 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dida</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DİDA — Dut Interdisciplinary Design Agency</title>
+<meta name="description" content="DİDA — Ankara merkezli disiplinlerarası tasarım ajansı. Yazılım, oyun, donanım, tasarım ve fiziksel üretim.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#A6DFD8;
+    --teal-soft:#EDF9F7;
+    --teal-line:#8FCFC6;
+    --ink:#3A1230;
+    --plum:#7B2150;
+    --magenta:#C22C82;
+    --pink:#D9A2C4;
+    --leaf:#2F9440;
+    --paper:#FFFFFF;
+    --display:'Space Grotesk','IBM Plex Sans Arabic',sans-serif;
+    --body:'IBM Plex Sans','IBM Plex Sans Arabic',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);color:var(--ink);background:var(--paper);line-height:1.65}
+  body.ar{font-family:'IBM Plex Sans Arabic',var(--body)}
+  body.ar h1,body.ar h2,body.ar h3,body.ar .wordmark{font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:0}
+  h1,h2,h3{font-family:var(--display);line-height:1.15}
+  a{color:inherit}
+  img{max-width:100%}
+  :focus-visible{outline:3px solid var(--magenta);outline-offset:3px;border-radius:4px}
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed;inset-inline:0;top:0;z-index:50;
+    background:color-mix(in srgb, var(--teal) 88%, white);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--teal-line);
+  }
+  .nav{
+    max-width:1200px;margin:0 auto;padding:.8rem 1.5rem;
+    display:flex;align-items:center;gap:1.5rem;
+  }
+  .wordmark{
+    font-family:var(--display);font-weight:700;font-size:1.35rem;
+    letter-spacing:.02em;display:flex;align-items:center;gap:.45rem;
+    text-decoration:none;
+  }
+  .wordmark .dot{
+    width:.72em;height:.72em;background:var(--magenta);
+    border-radius:38%;display:inline-block;flex:none;
+    box-shadow:inset -2px -3px 0 rgba(58,18,48,.35);
+  }
+  .nav-links{display:flex;gap:1.35rem;margin-inline-start:auto;list-style:none}
+  .nav-links a{text-decoration:none;font-weight:500;font-size:.95rem;opacity:.85}
+  .nav-links a:hover{opacity:1;color:var(--plum)}
+  .langs{display:flex;gap:.15rem;border:1.5px solid var(--ink);border-radius:99px;padding:.15rem}
+  .langs button{
+    border:0;background:transparent;font:inherit;font-size:.8rem;font-weight:600;
+    padding:.25rem .6rem;border-radius:99px;cursor:pointer;color:var(--ink);
+  }
+  .langs button.active{background:var(--ink);color:var(--teal)}
+  @media(max-width:820px){.nav-links{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height:100svh;background:var(--teal);
+    background:radial-gradient(120% 90% at 70% 20%, #B9EAE3 0%, var(--teal) 55%, #94D6CD 100%);
+    display:flex;align-items:stretch;padding-top:4.2rem;
+  }
+  .hero-grid{
+    max-width:1200px;margin:0 auto;padding:2rem 1.5rem 3rem;
+    display:grid;grid-template-columns:minmax(300px,5fr) 7fr;gap:1rem;
+    align-items:center;width:100%;
+  }
+  .hero-copy .eyebrow{
+    font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--plum);margin-bottom:1.2rem;display:flex;align-items:center;gap:.55rem;
+  }
+  body.ar .hero-copy .eyebrow{letter-spacing:0}
+  .hero-copy .eyebrow::before{content:"";width:26px;height:2px;background:var(--plum);flex:none}
+  .hero-copy h1{font-size:clamp(1.85rem,3.9vw,3.15rem);font-weight:700;margin-bottom:1.3rem;max-width:16ch}
+  @media(max-width:900px){.hero-copy h1{margin-inline:auto}}
+  .hero-copy p{font-size:1.08rem;max-width:34ch;margin-bottom:2rem;color:#40213a}
+  .hint{
+    display:inline-flex;align-items:center;gap:.6rem;
+    font-size:.9rem;font-weight:600;color:var(--plum);
+    background:rgba(255,255,255,.55);padding:.55rem 1rem;border-radius:99px;
+  }
+  .hint .pulse{
+    width:.6rem;height:.6rem;border-radius:38%;background:var(--magenta);
+    animation:pulse 2.2s ease-in-out infinite;flex:none;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+  .stage{position:relative;height:min(78vh,720px);min-height:420px}
+  #berry-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .berry-tip{
+    position:absolute;transform:translate(-50%,-130%);
+    background:var(--ink);color:#fff;font-size:.85rem;font-weight:600;
+    padding:.4rem .85rem;border-radius:99px;pointer-events:none;
+    opacity:0;transition:opacity .18s ease;white-space:nowrap;z-index:5;
+  }
+  .berry-tip::after{
+    content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:var(--ink);
+  }
+  .berry-tip.show{opacity:1}
+  .webgl-fallback{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    text-align:center;padding:2rem;color:var(--plum);font-weight:500;
+  }
+  @media(max-width:900px){
+    .hero-grid{grid-template-columns:1fr;padding-top:1rem}
+    .stage{height:56vh;min-height:340px;order:2}
+    .hero-copy{order:1;text-align:center}
+    .hero-copy .eyebrow{justify-content:center}
+    .hero-copy .eyebrow::before{display:none}
+    .hero-copy p{margin-inline:auto}
+  }
+
+  /* ---------- Sections ---------- */
+  section{padding:6rem 1.5rem}
+  .wrap{max-width:1040px;margin:0 auto}
+  .sec-head{display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem}
+  .sec-head .chip{width:1rem;height:1rem;border-radius:38%;flex:none;box-shadow:inset -2px -3px 0 rgba(58,18,48,.3)}
+  .sec-head .kicker{font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--plum)}
+  body.ar .sec-head .kicker{letter-spacing:0}
+  section h2{font-size:clamp(1.9rem,3.6vw,2.7rem);margin-bottom:1.4rem}
+  section .lead{font-size:1.12rem;max-width:62ch;color:#43223c}
+  section .lead + .lead{margin-top:1rem}
+  .tinted{background:var(--teal-soft)}
+
+  /* Sub-brand cards (Aflam / Bidah) */
+  .brand-card{
+    background:var(--paper);border:1.5px solid var(--teal-line);border-radius:20px;
+    padding:2.2rem;max-width:760px;
+  }
+  .tinted .brand-card{border-color:transparent;box-shadow:0 8px 30px rgba(58,18,48,.07)}
+  .brand-card .tag{
+    display:inline-block;font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--paper);background:var(--plum);border-radius:99px;padding:.3rem .8rem;margin-bottom:1.1rem;
+  }
+  body.ar .brand-card .tag{letter-spacing:0}
+
+  .btn{
+    display:inline-block;margin-top:1.4rem;background:var(--plum);color:#fff;
+    font-weight:600;font-size:.95rem;text-decoration:none;
+    padding:.7rem 1.4rem;border-radius:99px;transition:background .2s ease;
+  }
+  .btn:hover{background:var(--magenta)}
+
+  /* Aflam video reel */
+  .reel{margin-top:2.4rem;max-width:860px}
+  .reel-frame{
+    position:relative;border-radius:20px;overflow:hidden;background:var(--ink);
+    aspect-ratio:16/9;box-shadow:0 14px 40px rgba(58,18,48,.18);
+  }
+  .reel-frame video{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .25s ease}
+  .reel-missing{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    color:var(--pink);font-weight:500;text-align:center;padding:1rem;pointer-events:none;
+  }
+  .reel-nav{position:absolute;inset-block:0;display:flex;align-items:center}
+  .reel-nav.prev{inset-inline-start:.6rem}
+  .reel-nav.next{inset-inline-end:.6rem}
+  .reel-nav button{
+    width:2.6rem;height:2.6rem;border-radius:50%;border:0;cursor:pointer;
+    background:rgba(255,255,255,.85);color:var(--ink);font-size:1.2rem;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .reel-nav button:hover{background:#fff}
+  .reel-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;max-width:860px}
+  .reel-dots{display:flex;gap:.45rem}
+  .reel-dots button{
+    width:.85rem;height:.85rem;border-radius:38%;border:0;cursor:pointer;
+    background:var(--pink);opacity:.45;transition:all .2s ease;padding:0;
+  }
+  .reel-dots button.on{opacity:1;background:var(--magenta);transform:scale(1.2)}
+  .reel-count{font-size:.85rem;font-weight:600;color:var(--plum)}
+
+  /* Marketing capabilities */
+  .mk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-top:2.2rem}
+  .mk{
+    background:var(--paper);border:1.5px solid var(--teal-line);border-radius:14px;
+    padding:1.1rem 1.3rem;display:flex;gap:.85rem;
+  }
+  .mk .chip{width:.75rem;height:.75rem;border-radius:38%;flex:none;margin-top:.4rem;box-shadow:inset -1px -2px 0 rgba(58,18,48,.3)}
+  .mk h3{font-size:1rem;margin-bottom:.2rem}
+  .mk p{font-size:.92rem;color:#4c2a45}
+
+  /* Services grid */
+  .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.2rem;margin-top:2.4rem}
+  .svc{
+    background:var(--paper);border:1.5px solid var(--teal-line);border-radius:18px;
+    padding:1.6rem;transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .svc:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(58,18,48,.1)}
+  .svc .chip{width:.95rem;height:.95rem;border-radius:38%;margin-bottom:1rem;box-shadow:inset -2px -3px 0 rgba(58,18,48,.3)}
+  .svc h3{font-size:1.12rem;margin-bottom:.5rem}
+  .svc p{font-size:.95rem;color:#4c2a45}
+
+  /* Contact */
+  .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:2.4rem}
+  .contact-card{background:var(--paper);border:1.5px solid var(--teal-line);border-radius:18px;padding:1.6rem}
+  .contact-card h3{font-size:1rem;margin-bottom:.45rem;color:var(--plum)}
+  .contact-card p,.contact-card a{font-size:.98rem}
+  .contact-card a{color:var(--magenta);font-weight:600;text-decoration:none}
+  .contact-card a:hover{text-decoration:underline}
+
+  footer{
+    background:var(--ink);color:#EDD9E6;padding:2.4rem 1.5rem;text-align:center;font-size:.9rem;
+  }
+  footer .leafline{color:var(--teal);font-family:var(--display);font-weight:500;margin-bottom:.4rem}
+
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .hint .pulse{animation:none}
+    .svc,.svc:hover{transition:none;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav" aria-label="Ana menü">
+    <a class="wordmark" href="#top"><span class="dot" aria-hidden="true"></span>DİDA</a>
+    <ul class="nav-links">
+      <li><a href="#about"     data-i="nav_about">Hakkımızda</a></li>
+      <li><a href="#aflam"     data-i="nav_aflam">Aflam</a></li>
+      <li><a href="#mdd"       data-i="nav_mdd">MDD Studio</a></li>
+      <li><a href="#bidah"     data-i="nav_bidah">Bidah</a></li>
+      <li><a href="#marketing" data-i="nav_marketing">Pazarlama</a></li>
+      <li><a href="#services"  data-i="nav_services">Hizmetler</a></li>
+      <li><a href="#contact"   data-i="nav_contact">İletişim</a></li>
+    </ul>
+    <div class="langs" role="group" aria-label="Dil seçimi" style="margin-inline-start:1rem">
+      <button data-lang="tr" class="active">TR</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="ar">AR</button>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- ================= HERO ================= -->
+  <div class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i="hero_eyebrow">Ankara · Disiplinlerarası Tasarım Ajansı</p>
+        <h1 data-i="hero_h1">Bu ağaç dut verdikçe bilesiniz Anadolu bizimdir.</h1>
+        <p data-i="hero_sub">DİDA'da her yazılım, oyun, donanım, tasarım ve üretim aynı gövdeden beslenir.</p>
+        <span class="hint"><span class="pulse" aria-hidden="true"></span><span data-i="hero_hint">Keşfetmek için tanelere dokunun</span></span>
+      </div>
+      <div class="stage">
+        <canvas id="berry-canvas" aria-label="Etkileşimli 3B dut"></canvas>
+        <div class="berry-tip" id="berry-tip" role="status"></div>
+        <div class="webgl-fallback" id="webgl-fallback" data-i="webgl_fallback">Tarayıcınız 3B görüntülemeyi desteklemiyor — menüden bölümlere ulaşabilirsiniz.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ABOUT ================= -->
+  <section id="about">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#7B2150"></span>
+        <span class="kicker" data-i="about_kicker">DİDA</span>
+      </div>
+      <h2 data-i="about_h2">Hakkımızda</h2>
+      <p class="lead" data-i="about_p1">DİDA — Dut Interdisciplinary Design Agency — Ankara merkezli, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.</p>
+      <p class="lead" data-i="about_p2">Yazılımdan oyuna, eğitim teknolojilerinden donanıma ve fiziksel üretime uzanan işlerimizi aynı ağacın meyveleri olarak görürüz. Dijitalde tasarlar, atölyede üretir, rafta buluştururuz.</p>
+    </div>
+  </section>
+
+  <!-- ================= AFLAM ================= -->
+  <section id="aflam" class="tinted">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#C22C82"></span>
+        <span class="kicker" data-i="aflam_kicker">Film &amp; Animasyon</span>
+      </div>
+      <h2>Aflam</h2>
+      <div class="brand-card">
+        <span class="tag" data-i="aflam_tag">DİDA'nın hikâye kolu</span>
+        <p class="lead" data-i="aflam_p1">Aflam, DİDA'nın film ve animasyon çatısıdır. Animasyon serileri, tanıtım filmleri ve görsel anlatı projeleri burada tasarlanır ve üretilir — çocuklara değer aktaran içeriklerden marka hikâyelerine kadar.</p>
+      </div>
+      <div class="reel">
+        <div class="reel-frame">
+          <video id="reel-video" playsinline muted autoplay controls preload="metadata"></video>
+          <div class="reel-missing" id="reel-missing"><span data-i="reel_missing">Videolar yakında burada.</span></div>
+          <div class="reel-nav prev"><button id="reel-prev" aria-label="Önceki film">‹</button></div>
+          <div class="reel-nav next"><button id="reel-next" aria-label="Sonraki film">›</button></div>
+        </div>
+        <div class="reel-foot">
+          <div class="reel-dots" id="reel-dots"></div>
+          <span class="reel-count" id="reel-count"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MDD STUDIO ================= -->
+  <section id="mdd">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#3F1430"></span>
+        <span class="kicker" data-i="mdd_kicker">Kağıt &amp; Kırtasiye</span>
+      </div>
+      <h2>MDD Studio</h2>
+      <div class="brand-card">
+        <span class="tag" data-i="mdd_tag">DİDA'nın kağıt işleri markası</span>
+        <p class="lead" data-i="mdd_p1">MDD Studio adını Arapça م د د kökünden alır: Midad (mürekkep), Müddet (vakit) ve Meded (yardım) — üç anlam, tek çatı. Sticker ve dua kartlarından ibadet takip defterlerine, kağıt ve kırtasiye ürünleri burada tasarlanır, atölyemizde üretilir.</p>
+        <a class="btn" href="https://mddstudio.co" target="_blank" rel="noopener" data-i="mdd_btn">mddstudio.co →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BIDAH ================= -->
+  <section id="bidah" class="tinted">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#5C1A3C"></span>
+        <span class="kicker" data-i="bidah_kicker">Ürün &amp; Donanım</span>
+      </div>
+      <h2>Bidah Innovations</h2>
+      <div class="brand-card">
+        <span class="tag" data-i="bidah_tag">DİDA'nın Ar-Ge kolu</span>
+        <p class="lead" data-i="bidah_p1">Bidah Innovations, fikirleri çalışan ürünlere dönüştüren araştırma ve geliştirme kolumuzdur. Gömülü sistemler, giyilebilir cihazlar ve akıllı ürün prototipleri — devre şemasından kutusuna kadar aynı çatı altında.</p>
+        <a class="btn" href="https://bidahinovations.com" target="_blank" rel="noopener" data-i="bidah_btn">bidahinovations.com →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MARKETING ================= -->
+  <section id="marketing">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#C22C82"></span>
+        <span class="kicker" data-i="mk_kicker">Büyüme</span>
+      </div>
+      <h2 data-i="mk_h2">Pazarlama</h2>
+      <p class="lead" data-i="mk_lead">Tasarladığımızı yalnızca üretmekle kalmıyor, pazara da taşıyoruz. Yapay zekâ ajanlarından kurulu pazarlama ekibimiz günün her saati çalışır.</p>
+      <div class="mk-grid">
+        <div class="mk"><span class="chip" style="background:#7B2150"></span><div><h3 data-i="mk1_h">SEO &amp; AEO</h3><p data-i="mk1_p">Arama motorlarında ve yapay zekâ asistanlarında görünürlük.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#C22C82"></span><div><h3 data-i="mk2_h">İçerik &amp; Sosyal Medya</h3><p data-i="mk2_p">Platforma özel içerik takvimi ve üretimi.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#5C1A3C"></span><div><h3 data-i="mk3_h">Reklam Yönetimi</h3><p data-i="mk3_p">Google ve Meta kampanyaları, reklam metinleri.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#A91E6E"></span><div><h3 data-i="mk4_h">E-posta Pazarlama</h3><p data-i="mk4_p">Hoş geldin serileri ve kampanya akışları.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#8E4A73"></span><div><h3 data-i="mk5_h">Dönüşüm Optimizasyonu</h3><p data-i="mk5_p">Landing page, form ve fiyatlandırma testleri.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#D9A2C4"></span><div><h3 data-i="mk6_h">Lansman Stratejisi</h3><p data-i="mk6_p">Fikirden vitrine ürün lansmanı planlaması.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#9C1F52"></span><div><h3 data-i="mk7_h">ASO</h3><p data-i="mk7_p">App Store ve Google Play mağaza optimizasyonu.</p></div></div>
+        <div class="mk"><span class="chip" style="background:#631941"></span><div><h3 data-i="mk8_h">Rakip &amp; Pazar Analizi</h3><p data-i="mk8_p">Konumlandırma ve mesaj haritaları.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SERVICES ================= -->
+  <section id="services" class="tinted">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#A91E6E"></span>
+        <span class="kicker" data-i="svc_kicker">Disiplinlerimiz</span>
+      </div>
+      <h2 data-i="svc_h2">Hizmetler</h2>
+      <p class="lead" data-i="svc_lead">Yedi tane, tek dut. Her disiplin kendi başına da çalışır, birlikte de.</p>
+      <div class="svc-grid">
+        <div class="svc"><div class="chip" style="background:#7B2150"></div><h3 data-i="s1_h">Yazılım &amp; Oyun</h3><p data-i="s1_p">Web uygulamaları, mobil uygulamalar ve tarayıcı oyunları.</p></div>
+        <div class="svc"><div class="chip" style="background:#C22C82"></div><h3 data-i="s2_h">Eğitim Teknolojileri</h3><p data-i="s2_p">Çocuklar ve aileler için eğitici uygulamalar ve içerikler.</p></div>
+        <div class="svc"><div class="chip" style="background:#5C1A3C"></div><h3 data-i="s3_h">Donanım &amp; Elektronik</h3><p data-i="s3_p">Prototipleme, gömülü sistemler ve ürün geliştirme.</p></div>
+        <div class="svc"><div class="chip" style="background:#A91E6E"></div><h3 data-i="s4_h">Grafik &amp; Ürün Tasarımı</h3><p data-i="s4_p">Marka kimliği, ambalaj ve baskıya hazır tasarım.</p></div>
+        <div class="svc"><div class="chip" style="background:#D9A2C4"></div><h3 data-i="s5_h">3D Baskı &amp; Üretim</h3><p data-i="s5_p">3D baskı, lazer işleme ve kişiselleştirilmiş ürünler.</p></div>
+        <div class="svc"><div class="chip" style="background:#8E4A73"></div><h3 data-i="s6_h">Film &amp; Animasyon</h3><p data-i="s6_p">Aflam çatısı altında video ve animasyon üretimi.</p></div>
+        <div class="svc"><div class="chip" style="background:#C22C82"></div><h3 data-i="s7_h">Pazarlama</h3><p data-i="s7_p">Yapay zekâ ajanlarından kurulu ekiple büyüme.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="chip" style="background:#2F9440"></span>
+        <span class="kicker" data-i="c_kicker">Bize ulaşın</span>
+      </div>
+      <h2 data-i="c_h2">İletişim</h2>
+      <p class="lead" data-i="c_lead">Atölyemize uğrayın ya da bir mesajla başlayalım.</p>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <h3 data-i="c1_h">Atölye &amp; Mağaza</h3>
+          <p data-i="c1_p">Kuzey Ankara Camii Külliyesi<br>Keçiören / Ankara</p>
+        </div>
+        <div class="contact-card">
+          <h3 data-i="c2_h">E-posta</h3>
+          <p><a href="mailto:info@didatasarim.com">info@didatasarim.com</a></p>
+        </div>
+        <div class="contact-card">
+          <h3 data-i="c3_h">Online Mağazalar</h3>
+          <p><a href="#" rel="noopener">Etsy</a> · <a href="#" rel="noopener">Trendyol</a> · <a href="#" rel="noopener">Shopier</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p class="leafline" data-i="f_line">Bu ağaç dut verdikçe bilesiniz Anadolu bizimdir.</p>
+  <p data-i="f_copy">© 2022 DİDA Tasarım Ajansı Ltd. Şti. Tüm hakları saklıdır.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   i18n — TR / EN / AR
+============================================================ */
+const i18n = {
+  tr: {
+    nav_about:"Hakkımızda", nav_aflam:"Aflam", nav_mdd:"MDD Studio", nav_marketing:"Pazarlama",
+    nav_bidah:"Bidah", nav_services:"Hizmetler", nav_contact:"İletişim",
+    hero_eyebrow:"Ankara · Disiplinlerarası Tasarım Ajansı",
+    hero_h1:"Bu ağaç dut verdikçe bilesiniz Anadolu bizimdir.",
+    hero_sub:"DİDA'da her yazılım, oyun, donanım, tasarım ve üretim aynı gövdeden beslenir.",
+    hero_hint:"Keşfetmek için tanelere dokunun",
+    webgl_fallback:"Tarayıcınız 3B görüntülemeyi desteklemiyor — menüden bölümlere ulaşabilirsiniz.",
+    about_kicker:"DİDA", about_h2:"Hakkımızda",
+    about_p1:"DİDA — Dut Interdisciplinary Design Agency — Ankara merkezli, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.",
+    about_p2:"Yazılımdan oyuna, eğitim teknolojilerinden donanıma ve fiziksel üretime uzanan işlerimizi aynı ağacın meyveleri olarak görürüz. Dijitalde tasarlar, atölyede üretir, rafta buluştururuz.",
+    aflam_kicker:"Film & Animasyon", aflam_tag:"DİDA'nın hikâye kolu",
+    aflam_p1:"Aflam, DİDA'nın film ve animasyon çatısıdır. Animasyon serileri, tanıtım filmleri ve görsel anlatı projeleri burada tasarlanır ve üretilir — çocuklara değer aktaran içeriklerden marka hikâyelerine kadar.",
+    reel_missing:"Videolar yakında burada.",
+    mdd_kicker:"Kağıt & Kırtasiye", mdd_tag:"DİDA'nın kağıt işleri markası",
+    mdd_p1:"MDD Studio adını Arapça م د د kökünden alır: Midad (mürekkep), Müddet (vakit) ve Meded (yardım) — üç anlam, tek çatı. Sticker ve dua kartlarından ibadet takip defterlerine, kağıt ve kırtasiye ürünleri burada tasarlanır, atölyemizde üretilir.",
+    mdd_btn:"mddstudio.co →",
+    bidah_kicker:"Ürün & Donanım", bidah_tag:"DİDA'nın Ar-Ge kolu",
+    bidah_p1:"Bidah Innovations, fikirleri çalışan ürünlere dönüştüren araştırma ve geliştirme kolumuzdur. Gömülü sistemler, giyilebilir cihazlar ve akıllı ürün prototipleri — devre şemasından kutusuna kadar aynı çatı altında.",
+    bidah_btn:"bidahinovations.com →",
+    mk_kicker:"Büyüme", mk_h2:"Pazarlama",
+    mk_lead:"Tasarladığımızı yalnızca üretmekle kalmıyor, pazara da taşıyoruz. Yapay zekâ ajanlarından kurulu pazarlama ekibimiz günün her saati çalışır.",
+    mk1_h:"SEO & AEO", mk1_p:"Arama motorlarında ve yapay zekâ asistanlarında görünürlük.",
+    mk2_h:"İçerik & Sosyal Medya", mk2_p:"Platforma özel içerik takvimi ve üretimi.",
+    mk3_h:"Reklam Yönetimi", mk3_p:"Google ve Meta kampanyaları, reklam metinleri.",
+    mk4_h:"E-posta Pazarlama", mk4_p:"Hoş geldin serileri ve kampanya akışları.",
+    mk5_h:"Dönüşüm Optimizasyonu", mk5_p:"Landing page, form ve fiyatlandırma testleri.",
+    mk6_h:"Lansman Stratejisi", mk6_p:"Fikirden vitrine ürün lansmanı planlaması.",
+    mk7_h:"ASO", mk7_p:"App Store ve Google Play mağaza optimizasyonu.",
+    mk8_h:"Rakip & Pazar Analizi", mk8_p:"Konumlandırma ve mesaj haritaları.",
+    svc_kicker:"Disiplinlerimiz", svc_h2:"Hizmetler",
+    svc_lead:"Yedi tane, tek dut. Her disiplin kendi başına da çalışır, birlikte de.",
+    s1_h:"Yazılım & Oyun", s1_p:"Web uygulamaları, mobil uygulamalar ve tarayıcı oyunları.",
+    s2_h:"Eğitim Teknolojileri", s2_p:"Çocuklar ve aileler için eğitici uygulamalar ve içerikler.",
+    s3_h:"Donanım & Elektronik", s3_p:"Prototipleme, gömülü sistemler ve ürün geliştirme.",
+    s4_h:"Grafik & Ürün Tasarımı", s4_p:"Marka kimliği, ambalaj ve baskıya hazır tasarım.",
+    s5_h:"3D Baskı & Üretim", s5_p:"3D baskı, lazer işleme ve kişiselleştirilmiş ürünler.",
+    s6_h:"Film & Animasyon", s6_p:"Aflam çatısı altında video ve animasyon üretimi.",
+    s7_h:"Pazarlama", s7_p:"Yapay zekâ ajanlarından kurulu ekiple büyüme.",
+    c_kicker:"Bize ulaşın", c_h2:"İletişim", c_lead:"Atölyemize uğrayın ya da bir mesajla başlayalım.",
+    c1_h:"Atölye & Mağaza", c1_p:"Kuzey Ankara Camii Külliyesi<br>Keçiören / Ankara",
+    c2_h:"E-posta", c3_h:"Online Mağazalar",
+    f_line:"Bu ağaç dut verdikçe bilesiniz Anadolu bizimdir.",
+    f_copy:"© 2022 DİDA Tasarım Ajansı Ltd. Şti. Tüm hakları saklıdır."
+  },
+  en: {
+    nav_about:"About", nav_aflam:"Aflam", nav_mdd:"MDD Studio", nav_marketing:"Marketing",
+    nav_bidah:"Bidah", nav_services:"Services", nav_contact:"Contact",
+    hero_eyebrow:"Ankara · Interdisciplinary Design Agency",
+    hero_h1:"As long as this tree bears mulberries, know that Anatolia is ours.",
+    hero_sub:"At DİDA, every piece of software, game, hardware, design and production is fed by the same trunk.",
+    hero_hint:"Touch the drupelets to explore",
+    webgl_fallback:"Your browser doesn't support 3D — use the menu to browse the sections.",
+    about_kicker:"DİDA", about_h2:"About us",
+    about_p1:"DİDA — Dut Interdisciplinary Design Agency — is an Ankara-based design agency working across disciplines. It takes its name from the mulberry tree: dozens of drupelets, each with its own flavour, fed by a single trunk.",
+    about_p2:"From software and games to education technology, hardware and physical production, we see our work as fruits of the same tree. We design digitally, make in the workshop, and meet you on the shelf.",
+    aflam_kicker:"Film & Animation", aflam_tag:"DİDA's storytelling arm",
+    aflam_p1:"Aflam is DİDA's film and animation studio. Animated series, promotional films and visual storytelling projects are designed and produced here — from value-driven children's content to brand stories.",
+    reel_missing:"Videos coming soon.",
+    mdd_kicker:"Paper & Stationery", mdd_tag:"DİDA's paper goods brand",
+    mdd_p1:"MDD Studio takes its name from the Arabic root م د د: Midad (ink), Müddet (time) and Meded (help) — three meanings, one roof. From stickers and prayer cards to worship journals, paper and stationery products are designed here and made in our workshop.",
+    mdd_btn:"mddstudio.co →",
+    bidah_kicker:"Product & Hardware", bidah_tag:"DİDA's R&D arm",
+    bidah_p1:"Bidah Innovations is our research and development arm that turns ideas into working products. Embedded systems, wearables and smart product prototypes — from schematic to enclosure, under one roof.",
+    bidah_btn:"bidahinovations.com →",
+    mk_kicker:"Growth", mk_h2:"Marketing",
+    mk_lead:"We don't just make what we design — we take it to market. Our marketing team of AI agents works around the clock.",
+    mk1_h:"SEO & AEO", mk1_p:"Visibility in search engines and AI assistants.",
+    mk2_h:"Content & Social Media", mk2_p:"Platform-specific content calendars and production.",
+    mk3_h:"Ad Management", mk3_p:"Google and Meta campaigns, ad copywriting.",
+    mk4_h:"Email Marketing", mk4_p:"Welcome series and campaign flows.",
+    mk5_h:"Conversion Optimisation", mk5_p:"Landing page, form and pricing tests.",
+    mk6_h:"Launch Strategy", mk6_p:"Launch planning from idea to shelf.",
+    mk7_h:"ASO", mk7_p:"App Store and Google Play store optimisation.",
+    mk8_h:"Competitor & Market Analysis", mk8_p:"Positioning and messaging maps.",
+    svc_kicker:"Our disciplines", svc_h2:"Services",
+    svc_lead:"Seven drupelets, one mulberry. Each discipline works on its own — and together.",
+    s1_h:"Software & Games", s1_p:"Web applications, mobile apps and browser games.",
+    s2_h:"Education Technology", s2_p:"Educational apps and content for children and families.",
+    s3_h:"Hardware & Electronics", s3_p:"Prototyping, embedded systems and product development.",
+    s4_h:"Graphic & Product Design", s4_p:"Brand identity, packaging and print-ready design.",
+    s5_h:"3D Printing & Making", s5_p:"3D printing, laser processing and personalised products.",
+    s6_h:"Film & Animation", s6_p:"Video and animation production under the Aflam roof.",
+    s7_h:"Marketing", s7_p:"Growth with a team of AI agents.",
+    c_kicker:"Get in touch", c_h2:"Contact", c_lead:"Drop by our workshop, or start with a message.",
+    c1_h:"Workshop & Store", c1_p:"Kuzey Ankara Mosque Complex<br>Keçiören / Ankara, Türkiye",
+    c2_h:"Email", c3_h:"Online Stores",
+    f_line:"As long as this tree bears mulberries, know that Anatolia is ours.",
+    f_copy:"© 2022 DİDA Tasarım Ajansı Ltd. Şti. All rights reserved."
+  },
+  ar: {
+    nav_about:"من نحن", nav_aflam:"أفلام", nav_mdd:"MDD Studio", nav_marketing:"التسويق",
+    nav_bidah:"بِداح", nav_services:"خدماتنا", nav_contact:"تواصل معنا",
+    hero_eyebrow:"أنقرة · وكالة تصميم متعددة التخصصات",
+    hero_h1:"ما دامت هذه الشجرة تُثمر التوت، فاعلموا أنّ الأناضول لنا.",
+    hero_sub:"في ديدا، كلُّ برمجيةٍ ولعبةٍ وعتادٍ وتصميمٍ وإنتاجٍ يتغذّى من الجذع نفسه.",
+    hero_hint:"المس الحبّات للاستكشاف",
+    webgl_fallback:"متصفحك لا يدعم العرض ثلاثي الأبعاد — استخدم القائمة لتصفّح الأقسام.",
+    about_kicker:"ديدا", about_h2:"من نحن",
+    about_p1:"ديدا — وكالة دوت للتصميم متعدد التخصصات — وكالة تصميم مقرّها أنقرة تعمل عبر تخصصات متعددة. تستمدّ اسمها من شجرة التوت: عشرات الحبّات، لكلٍّ منها نكهتها، يغذّيها جذعٌ واحد.",
+    about_p2:"من البرمجيات والألعاب إلى تقنيات التعليم والعتاد والإنتاج المادي، نرى أعمالنا ثماراً للشجرة نفسها. نصمّم رقمياً، ونصنع في الورشة، ونلتقي بكم على الرفّ.",
+    aflam_kicker:"أفلام ورسوم متحركة", aflam_tag:"ذراع ديدا للحكاية",
+    aflam_p1:"«أفلام» هو استوديو ديدا للأفلام والرسوم المتحركة. هنا تُصمَّم وتُنتَج المسلسلات المتحركة والأفلام التعريفية ومشاريع السرد البصري — من محتوى الأطفال الهادف إلى قصص العلامات التجارية.",
+    reel_missing:"الفيديوهات قريباً هنا.",
+    mdd_kicker:"ورقيات وقرطاسية", mdd_tag:"علامة ديدا للأعمال الورقية",
+    mdd_p1:"يستمدّ «MDD Studio» اسمه من الجذر العربي م د د: مِداد، ومُدّة، ومَدَد — ثلاثة معانٍ تحت سقفٍ واحد. من الملصقات وبطاقات الدعاء إلى دفاتر متابعة العبادات، تُصمَّم المنتجات الورقية والقرطاسية هنا وتُصنَع في ورشتنا.",
+    mdd_btn:"mddstudio.co ←",
+    bidah_kicker:"منتجات وعتاد", bidah_tag:"ذراع ديدا للبحث والتطوير",
+    bidah_p1:"«بِداح للابتكار» هي ذراعنا للبحث والتطوير التي تحوّل الأفكار إلى منتجات عاملة. أنظمة مدمجة وأجهزة قابلة للارتداء ونماذج أولية لمنتجات ذكية — من المخطط الإلكتروني إلى العلبة، تحت سقفٍ واحد.",
+    bidah_btn:"bidahinovations.com ←",
+    mk_kicker:"النموّ", mk_h2:"التسويق",
+    mk_lead:"لا نكتفي بصناعة ما نصمّمه، بل نوصله إلى السوق أيضاً. فريقنا التسويقي المكوَّن من وكلاء ذكاء اصطناعي يعمل على مدار الساعة.",
+    mk1_h:"تحسين محركات البحث والذكاء الاصطناعي", mk1_p:"الظهور في محركات البحث ومساعدي الذكاء الاصطناعي.",
+    mk2_h:"المحتوى ووسائل التواصل", mk2_p:"تقاويم محتوى وإنتاج مخصّص لكل منصة.",
+    mk3_h:"إدارة الإعلانات", mk3_p:"حملات Google وMeta ونصوص إعلانية.",
+    mk4_h:"التسويق بالبريد الإلكتروني", mk4_p:"سلاسل ترحيب ومسارات حملات.",
+    mk5_h:"تحسين التحويل", mk5_p:"اختبارات صفحات الهبوط والنماذج والتسعير.",
+    mk6_h:"استراتيجية الإطلاق", mk6_p:"تخطيط إطلاق المنتج من الفكرة إلى الرفّ.",
+    mk7_h:"تحسين متاجر التطبيقات", mk7_p:"App Store وGoogle Play.",
+    mk8_h:"تحليل المنافسين والسوق", mk8_p:"خرائط التموضع والرسائل.",
+    svc_kicker:"تخصصاتنا", svc_h2:"خدماتنا",
+    svc_lead:"سبع حبّات، توتةٌ واحدة. كلُّ تخصصٍ يعمل وحده — ومعاً أيضاً.",
+    s1_h:"برمجيات وألعاب", s1_p:"تطبيقات ويب وتطبيقات جوال وألعاب متصفح.",
+    s2_h:"تقنيات التعليم", s2_p:"تطبيقات ومحتوى تعليمي للأطفال والعائلات.",
+    s3_h:"عتاد وإلكترونيات", s3_p:"نماذج أولية وأنظمة مدمجة وتطوير منتجات.",
+    s4_h:"تصميم جرافيك ومنتجات", s4_p:"هوية بصرية وتغليف وتصاميم جاهزة للطباعة.",
+    s5_h:"طباعة ثلاثية الأبعاد وصناعة", s5_p:"طباعة ثلاثية الأبعاد ومعالجة بالليزر ومنتجات مخصّصة.",
+    s6_h:"أفلام ورسوم متحركة", s6_p:"إنتاج الفيديو والرسوم المتحركة تحت مظلة «أفلام».",
+    s7_h:"التسويق", s7_p:"النموّ مع فريقٍ من وكلاء الذكاء الاصطناعي.",
+    c_kicker:"تواصل معنا", c_h2:"تواصل معنا", c_lead:"زوروا ورشتنا، أو لنبدأ برسالة.",
+    c1_h:"الورشة والمتجر", c1_p:"مجمّع مسجد شمال أنقرة<br>كتشي أورَن / أنقرة، تركيا",
+    c2_h:"البريد الإلكتروني", c3_h:"المتاجر الإلكترونية",
+    f_line:"ما دامت هذه الشجرة تُثمر التوت، فاعلموا أنّ الأناضول لنا.",
+    f_copy:"© 2022 شركة DİDA Tasarım Ajansı Ltd. Şti. جميع الحقوق محفوظة."
+  }
+};
+
+let currentLang = 'tr';
+function setLang(l){
+  currentLang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = (l === 'ar') ? 'rtl' : 'ltr';
+  document.body.classList.toggle('ar', l === 'ar');
+  document.querySelectorAll('[data-i]').forEach(el => {
+    const v = i18n[l][el.dataset.i];
+    if (v !== undefined) el.innerHTML = v;
+  });
+  document.querySelectorAll('.langs button').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === l));
+}
+document.querySelectorAll('.langs button').forEach(b =>
+  b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+/* ============================================================
+   Aflam video reel — yeni film eklemek için bu listeye
+   dosya yolunu ekleyin, gerisi otomatik.
+============================================================ */
+const aflamVideos = [
+  'videos/aflam-1.mp4',
+  'videos/aflam-2.mp4',
+  'videos/aflam-3.mp4',
+  'videos/aflam-4.mp4'
+];
+(function(){
+  const video   = document.getElementById('reel-video');
+  const dots    = document.getElementById('reel-dots');
+  const count   = document.getElementById('reel-count');
+  const missing = document.getElementById('reel-missing');
+  if (!video || !aflamVideos.length) return;
+  let i = 0;
+
+  aflamVideos.forEach((_, k) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', 'Film ' + (k + 1));
+    b.addEventListener('click', () => show(k));
+    dots.appendChild(b);
+  });
+
+  function show(k){
+    i = (k + aflamVideos.length) % aflamVideos.length;
+    missing.style.display = 'none';
+    video.style.opacity = 1;
+    video.src = aflamVideos[i];
+    video.load();
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+    Array.from(dots.children).forEach((d, j) => d.classList.toggle('on', j === i));
+    count.textContent = (i + 1) + ' / ' + aflamVideos.length;
+  }
+
+  video.addEventListener('ended', () => show(i + 1));   /* film bitince sıradakine geç */
+  video.addEventListener('error', () => {
+    missing.style.display = 'flex';
+    video.style.opacity = 0;
+  });
+  document.getElementById('reel-prev').addEventListener('click', () => show(i - 1));
+  document.getElementById('reel-next').addEventListener('click', () => show(i + 1));
+  show(0);
+})();
+
+/* ============================================================
+   3D Mulberry — Three.js
+============================================================ */
+(function(){
+  const canvas = document.getElementById('berry-canvas');
+  const stage  = canvas.parentElement;
+  const tip    = document.getElementById('berry-tip');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  } catch(e){
+    document.getElementById('webgl-fallback').style.display = 'flex';
+    canvas.style.display = 'none';
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(0, 0.4, 8.2);
+
+  /* Lights: soft key + teal fill + magenta rim */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xfff6ee, 0.9);
+  key.position.set(4, 6, 6);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x9fe6dd, 0.5);
+  fill.position.set(-5, 1, 3);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xE04FA0, 0.35);
+  rim.position.set(0, -3, -6);
+  scene.add(rim);
+
+  /* Rounded-cube "drupelet" geometry (box → sphere blend) */
+  function drupeletGeometry(rounding){
+    const g = new THREE.BoxGeometry(1, 1, 1, 10, 10, 10);
+    const pos = g.attributes.position;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++){
+      v.fromBufferAttribute(pos, i);
+      const s = v.clone().normalize().multiplyScalar(0.62);
+      v.lerp(s, rounding);
+      pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+  const berryGeo = drupeletGeometry(0.6);
+
+  const cluster = new THREE.Group();
+  scene.add(cluster);
+
+  /* Drupelets: [x, y, z, size, color, sectionKey|null]
+     Layout follows the logo: wide at top, tapering down,
+     lighter pink drupelets on the right edge. */
+  const berries = [
+    [-1.05,  1.45,  0.15, 0.92, 0x5C1A3C, 'about'   ],
+    [ 0.00,  1.60,  0.30, 0.95, 0x7B2150, null      ],
+    [ 1.00,  1.42,  0.10, 0.90, 0xA91E6E, 'mdd'     ],
+    [-1.30,  0.55, -0.10, 0.85, 0x6B1C46, null      ],
+    [-0.38,  0.68,  0.40, 0.92, 0x8E1E5B, 'aflam'   ],
+    [ 0.58,  0.72,  0.45, 0.96, 0xC22C82, 'bidah'   ],
+    [ 1.42,  0.48, -0.15, 0.62, 0xC879A9, null      ],
+    [-0.85, -0.28,  0.25, 0.82, 0x7B2150, 'marketing'],
+    [ 0.10, -0.18,  0.50, 0.94, 0xB0246F, 'services'],
+    [ 1.05, -0.22,  0.05, 0.60, 0xD9A2C4, null      ],
+    [-0.42, -1.05,  0.20, 0.58, 0x9C1F52, null      ],
+    [ 0.38, -1.00,  0.40, 0.82, 0x8E1E5B, 'contact' ],
+    [ 1.00, -0.90,  0.00, 0.55, 0xC088AF, null      ],
+    /* back layer for depth */
+    [-0.45,  1.05, -0.55, 0.80, 0x4C1533, null      ],
+    [ 0.55,  0.10, -0.60, 0.85, 0x631941, null      ]
+  ];
+
+  const interactive = [];
+  const allBerries  = [];
+  berries.forEach((b, idx) => {
+    const [x, y, z, size, color, section] = b;
+    const mat = new THREE.MeshStandardMaterial({
+      color, roughness: 0.32, metalness: 0.05,
+      emissive: color, emissiveIntensity: 0.0
+    });
+    const m = new THREE.Mesh(berryGeo, mat);
+    m.position.set(x, y, z);
+    m.scale.setScalar(size);
+    m.rotation.set(Math.random()*0.4-0.2, Math.random()*0.6-0.3, Math.random()*0.4-0.2);
+    m.userData = {
+      section, baseScale: size, baseY: y,
+      phase: Math.random()*Math.PI*2,
+      speed: 0.6 + Math.random()*0.5,
+      hover: 0
+    };
+    cluster.add(m);
+    allBerries.push(m);
+    if (section) interactive.push(m);
+  });
+
+  /* Stem */
+  const stemCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3( 0.05, 1.95, 0.1),
+    new THREE.Vector3(-0.12, 2.35, 0.12),
+    new THREE.Vector3(-0.48, 2.62, 0.05)
+  ]);
+  const stem = new THREE.Mesh(
+    new THREE.TubeGeometry(stemCurve, 16, 0.055, 8, false),
+    new THREE.MeshStandardMaterial({ color: 0x2E8B3B, roughness: 0.6 })
+  );
+  cluster.add(stem);
+
+  /* Leaf */
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.bezierCurveTo(0.42, 0.08, 0.58, 0.5, 0.34, 0.9);
+  leafShape.bezierCurveTo(0.08, 0.62, 0.0, 0.28, 0, 0);
+  const leaf = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(leafShape, { depth: 0.06, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 }),
+    new THREE.MeshStandardMaterial({ color: 0x37A44A, roughness: 0.5 })
+  );
+  leaf.position.set(0.02, 2.15, 0.12);
+  leaf.rotation.set(0.15, 0.3, 0.5);
+  leaf.scale.setScalar(1.05);
+  cluster.add(leaf);
+
+  cluster.position.y = -0.35;
+
+  /* Sizing */
+  function resize(){
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    /* keep the whole berry in view on narrow screens */
+    camera.position.z = (w / h < 0.85) ? 10.2 : 8.2;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* Interaction */
+  const raycaster = new THREE.Raycaster();
+  const pointer   = new THREE.Vector2(10, 10);
+  let mouseX = 0, mouseY = 0, hovered = null;
+
+  function setPointer(e){
+    const r = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    mouseX = pointer.x; mouseY = pointer.y;
+  }
+  canvas.addEventListener('pointermove', setPointer);
+  canvas.addEventListener('pointerdown', setPointer);
+
+  function goTo(section){
+    const el = document.getElementById(section);
+    if (el) el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  canvas.addEventListener('click', () => {
+    if (hovered) goTo(hovered.userData.section);
+  });
+
+  const tmpV = new THREE.Vector3();
+  function updateTip(){
+    if (!hovered){ tip.classList.remove('show'); return; }
+    hovered.getWorldPosition(tmpV);
+    tmpV.project(camera);
+    const x = ( tmpV.x * 0.5 + 0.5) * stage.clientWidth;
+    const y = (-tmpV.y * 0.5 + 0.5) * stage.clientHeight;
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+    tip.textContent = i18n[currentLang]['nav_' + hovered.userData.section];
+    tip.classList.add('show');
+  }
+
+  /* Animation loop */
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    /* gentle idle sway + mouse parallax */
+    const idleY = reduceMotion ? 0 : Math.sin(t * 0.25) * 0.10;
+    const idleX = reduceMotion ? 0 : Math.sin(t * 0.18) * 0.04;
+    cluster.rotation.y += ((idleY + mouseX * 0.22) - cluster.rotation.y) * 0.05;
+    cluster.rotation.x += ((idleX - mouseY * 0.10) - cluster.rotation.x) * 0.05;
+
+    /* hover detection */
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(interactive);
+    const hit = hits.length ? hits[0].object : null;
+    if (hit !== hovered){
+      hovered = hit;
+      canvas.style.cursor = hovered ? 'pointer' : 'default';
+    }
+
+    /* per-berry breathing + hover response */
+    allBerries.forEach(m => {
+      const u = m.userData;
+      if (!reduceMotion){
+        m.position.y = u.baseY + Math.sin(t * u.speed + u.phase) * 0.035;
+      }
+      const target = (m === hovered) ? 1 : 0;
+      u.hover += (target - u.hover) * 0.12;
+      const s = u.baseScale * (1 + u.hover * 0.22);
+      m.scale.setScalar(s);
+      m.material.emissiveIntensity = u.hover * 0.35;
+    });
+
+    updateTip();
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
 </html>
