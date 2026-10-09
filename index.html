@@ -144,6 +144,7 @@
     .hero-grid{padding:1rem 1.25rem 2rem}
     .brand-card{padding:1.5rem}
     .svc-grid{grid-template-columns:1fr;gap:.9rem}
+    .pr-grid{grid-template-columns:1fr;gap:.9rem}
     .mk-grid{grid-template-columns:1fr;gap:.8rem}
     .contact-grid{grid-template-columns:1fr;gap:.9rem}
     .reel-nav button{width:2.2rem;height:2.2rem}
@@ -233,6 +234,17 @@
   .svc h3{font-size:1.12rem;margin-bottom:.5rem}
   .svc p{font-size:.95rem;color:#4c2a45}
 
+  /* Product links */
+  .pr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:1.4rem}
+  .pr{
+    display:block;background:var(--paper);border:1.5px solid var(--teal-line);border-radius:18px;
+    padding:1.5rem;text-decoration:none;transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .pr:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(58,18,48,.1)}
+  .pr h3{font-size:1.1rem;margin-bottom:.4rem;color:var(--plum)}
+  .pr h3 span{color:var(--magenta)}
+  .pr p{font-size:.93rem;color:#4c2a45}
+
   /* Contact */
   .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:2.4rem}
   .contact-card{background:var(--paper);border:1.5px solid var(--teal-line);border-radius:18px;padding:1.6rem}
@@ -302,7 +314,7 @@
         <span class="kicker" data-i="about_kicker">DİDA</span>
       </div>
       <h2 data-i="about_h2">Hakkımızda</h2>
-      <p class="lead" data-i="about_p1">DİDA — Dut Interdisciplinary Design Agency — Ankara merkezli, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.</p>
+      <p class="lead" data-i="about_p1">DİDA — Dut Interdisciplinary Design Agency — 22 Haziran 2022'de Ankara'da kurulmuş, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.</p>
       <p class="lead" data-i="about_p2">Yazılımdan oyuna, eğitim teknolojilerinden donanıma ve fiziksel üretime uzanan işlerimizi aynı ağacın meyveleri olarak görürüz. Dijitalde tasarlar, atölyede üretir, rafta buluştururuz.</p>
     </div>
   </section>
@@ -406,6 +418,25 @@
         <div class="svc"><div class="chip" style="background:#8E4A73"></div><h3 data-i="s6_h">Film &amp; Animasyon</h3><p data-i="s6_p">Aflam çatısı altında video ve animasyon üretimi.</p></div>
         <div class="svc"><div class="chip" style="background:#C22C82"></div><h3 data-i="s7_h">Pazarlama</h3><p data-i="s7_p">Yapay zekâ ajanlarından kurulu ekiple büyüme.</p></div>
       </div>
+
+      <div class="sec-head" style="margin-top:3.6rem">
+        <span class="chip" style="background:#3F1430"></span>
+        <span class="kicker" data-i="pr_kicker">Ürünlerimiz</span>
+      </div>
+      <div class="pr-grid">
+        <a class="pr" href="https://www.632games.com" target="_blank" rel="noopener">
+          <h3>632 Games <span aria-hidden="true">↗</span></h3>
+          <p data-i="pr1_p">Çocuklar için güvenli, değerlere uygun HTML5 oyun portalımız.</p>
+        </a>
+        <a class="pr" href="https://plog.fit" target="_blank" rel="noopener">
+          <h3>PlogFit <span aria-hidden="true">↗</span></h3>
+          <p data-i="pr2_p">Yürürken çevreni temizle: plogging fitness web uygulamamız.</p>
+        </a>
+        <a class="pr" href="https://mddstudio.co" target="_blank" rel="noopener">
+          <h3>MDD Studio <span aria-hidden="true">↗</span></h3>
+          <p data-i="pr3_p">Kağıt, kırtasiye ve sticker markamızın online mağazası.</p>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -429,7 +460,7 @@
         </div>
         <div class="contact-card">
           <h3 data-i="c3_h">Online Mağazalar</h3>
-          <p><a href="#" rel="noopener">Etsy</a> · <a href="#" rel="noopener">Trendyol</a> · <a href="#" rel="noopener">Shopier</a></p>
+          <p><a href="https://www.etsy.com/shop/MDDStudioTR" target="_blank" rel="noopener">Etsy</a> · <a href="https://www.shopier.com/mddstudio" target="_blank" rel="noopener">Shopier</a> · <a href="#" rel="noopener">Trendyol</a></p>
         </div>
       </div>
     </div>
@@ -456,7 +487,7 @@ const i18n = {
     hero_hint:"Keşfetmek için tanelere dokunun",
     webgl_fallback:"Tarayıcınız 3B görüntülemeyi desteklemiyor — menüden bölümlere ulaşabilirsiniz.",
     about_kicker:"DİDA", about_h2:"Hakkımızda",
-    about_p1:"DİDA — Dut Interdisciplinary Design Agency — Ankara merkezli, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.",
+    about_p1:"DİDA — Dut Interdisciplinary Design Agency — 22 Haziran 2022'de Ankara'da kurulmuş, disiplinler arasında çalışan bir tasarım ajansıdır. Adını dut ağacından alır: tek bir gövdeden beslenen, her biri kendi tadında onlarca tane.",
     about_p2:"Yazılımdan oyuna, eğitim teknolojilerinden donanıma ve fiziksel üretime uzanan işlerimizi aynı ağacın meyveleri olarak görürüz. Dijitalde tasarlar, atölyede üretir, rafta buluştururuz.",
     aflam_kicker:"Film & Animasyon", aflam_tag:"DİDA'nın hikâye kolu",
     aflam_p1:"Aflam, DİDA'nın film ve animasyon çatısıdır. Animasyon serileri, tanıtım filmleri ve görsel anlatı projeleri burada tasarlanır ve üretilir — çocuklara değer aktaran içeriklerden marka hikâyelerine kadar.",
@@ -486,6 +517,10 @@ const i18n = {
     s5_h:"3D Baskı & Üretim", s5_p:"3D baskı, lazer işleme ve kişiselleştirilmiş ürünler.",
     s6_h:"Film & Animasyon", s6_p:"Aflam çatısı altında video ve animasyon üretimi.",
     s7_h:"Pazarlama", s7_p:"Yapay zekâ ajanlarından kurulu ekiple büyüme.",
+    pr_kicker:"Ürünlerimiz",
+    pr1_p:"Çocuklar için güvenli, değerlere uygun HTML5 oyun portalımız.",
+    pr2_p:"Yürürken çevreni temizle: plogging fitness web uygulamamız.",
+    pr3_p:"Kağıt, kırtasiye ve sticker markamızın online mağazası.",
     c_kicker:"Bize ulaşın", c_h2:"İletişim", c_lead:"Atölyemize uğrayın ya da bir mesajla başlayalım.",
     c1_h:"Atölye & Mağaza", c1_p:"Kuzey Ankara Camii Külliyesi<br>Keçiören / Ankara",
     c2_h:"E-posta", c3_h:"Online Mağazalar",
@@ -501,7 +536,7 @@ const i18n = {
     hero_hint:"Touch the drupelets to explore",
     webgl_fallback:"Your browser doesn't support 3D — use the menu to browse the sections.",
     about_kicker:"DİDA", about_h2:"About us",
-    about_p1:"DİDA — Dut Interdisciplinary Design Agency — is an Ankara-based design agency working across disciplines. It takes its name from the mulberry tree: dozens of drupelets, each with its own flavour, fed by a single trunk.",
+    about_p1:"DİDA — Dut Interdisciplinary Design Agency — is a design agency working across disciplines, founded in Ankara on 22 June 2022. It takes its name from the mulberry tree: dozens of drupelets, each with its own flavour, fed by a single trunk.",
     about_p2:"From software and games to education technology, hardware and physical production, we see our work as fruits of the same tree. We design digitally, make in the workshop, and meet you on the shelf.",
     aflam_kicker:"Film & Animation", aflam_tag:"DİDA's storytelling arm",
     aflam_p1:"Aflam is DİDA's film and animation studio. Animated series, promotional films and visual storytelling projects are designed and produced here — from value-driven children's content to brand stories.",
@@ -531,6 +566,10 @@ const i18n = {
     s5_h:"3D Printing & Making", s5_p:"3D printing, laser processing and personalised products.",
     s6_h:"Film & Animation", s6_p:"Video and animation production under the Aflam roof.",
     s7_h:"Marketing", s7_p:"Growth with a team of AI agents.",
+    pr_kicker:"Our Products",
+    pr1_p:"Our family-safe, values-aligned HTML5 game portal.",
+    pr2_p:"Clean as you move: our plogging fitness web app.",
+    pr3_p:"The online store of our paper, stationery and sticker brand.",
     c_kicker:"Get in touch", c_h2:"Contact", c_lead:"Drop by our workshop, or start with a message.",
     c1_h:"Workshop & Store", c1_p:"Kuzey Ankara Mosque Complex<br>Keçiören / Ankara, Türkiye",
     c2_h:"Email", c3_h:"Online Stores",
@@ -546,7 +585,7 @@ const i18n = {
     hero_hint:"المس الحبّات للاستكشاف",
     webgl_fallback:"متصفحك لا يدعم العرض ثلاثي الأبعاد — استخدم القائمة لتصفّح الأقسام.",
     about_kicker:"ديدا", about_h2:"من نحن",
-    about_p1:"ديدا — وكالة دوت للتصميم متعدد التخصصات — وكالة تصميم مقرّها أنقرة تعمل عبر تخصصات متعددة. تستمدّ اسمها من شجرة التوت: عشرات الحبّات، لكلٍّ منها نكهتها، يغذّيها جذعٌ واحد.",
+    about_p1:"ديدا — وكالة دوت للتصميم متعدد التخصصات — وكالة تصميم تعمل عبر تخصصات متعددة، تأسست في أنقرة في 22 يونيو/حزيران 2022. تستمدّ اسمها من شجرة التوت: عشرات الحبّات، لكلٍّ منها نكهتها، يغذّيها جذعٌ واحد.",
     about_p2:"من البرمجيات والألعاب إلى تقنيات التعليم والعتاد والإنتاج المادي، نرى أعمالنا ثماراً للشجرة نفسها. نصمّم رقمياً، ونصنع في الورشة، ونلتقي بكم على الرفّ.",
     aflam_kicker:"أفلام ورسوم متحركة", aflam_tag:"ذراع ديدا للحكاية",
     aflam_p1:"«أفلام» هو استوديو ديدا للأفلام والرسوم المتحركة. هنا تُصمَّم وتُنتَج المسلسلات المتحركة والأفلام التعريفية ومشاريع السرد البصري — من محتوى الأطفال الهادف إلى قصص العلامات التجارية.",
@@ -576,6 +615,10 @@ const i18n = {
     s5_h:"طباعة ثلاثية الأبعاد وصناعة", s5_p:"طباعة ثلاثية الأبعاد ومعالجة بالليزر ومنتجات مخصّصة.",
     s6_h:"أفلام ورسوم متحركة", s6_p:"إنتاج الفيديو والرسوم المتحركة تحت مظلة «أفلام».",
     s7_h:"التسويق", s7_p:"النموّ مع فريقٍ من وكلاء الذكاء الاصطناعي.",
+    pr_kicker:"منتجاتنا",
+    pr1_p:"بوابتنا لألعاب HTML5 الآمنة للأطفال والموافقة للقيم.",
+    pr2_p:"نظّف وأنت تتحرك: تطبيقنا الرياضي للبلوغينغ (الجري مع جمع النفايات).",
+    pr3_p:"المتجر الإلكتروني لعلامتنا للورقيات والقرطاسية والملصقات.",
     c_kicker:"تواصل معنا", c_h2:"تواصل معنا", c_lead:"زوروا ورشتنا، أو لنبدأ برسالة.",
     c1_h:"الورشة والمتجر", c1_p:"مجمّع مسجد شمال أنقرة<br>كتشي أورَن / أنقرة، تركيا",
     c2_h:"البريد الإلكتروني", c3_h:"المتاجر الإلكترونية",
