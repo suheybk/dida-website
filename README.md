@@ -10,15 +10,8 @@ Dut Interdisciplinary Design Agency web sitesi. Tek dosyalık statik site (Three
 `index.html` içindeki `aflamVideos` listesine yeni dosya yolunu ekleyin; oynatıcı, noktalar ve sayaç otomatik güncellenir.
 
 ## Yayınlama
-İki yol var; ikisi de aynı Cloudflare Pages projesine çıkar.
+Site Cloudflare'de **Workers Builds** ile yayınlanır: proje (`dida-website`) bu repoya bağlıdır, `main` dalına gelen her push otomatik derlenip canlıya alınır. Build komutu yoktur; `index.html` ve `videos/` olduğu gibi statik asset olarak sunulur.
 
-1. **Cloudflare Git bağlantısı** — Cloudflare Pages → bu repoyu bağlayın, build komutu yok, output: `/`.
-   Panelde "disconnected from your Git account" uyarısı görürseniz Settings → Builds → Manage ile GitHub yetkisini yenileyin.
-2. **GitHub Actions** (`.github/workflows/deploy.yml`) — Git bağlantısından bağımsız çalışır; her `main` push'unda `index.html` + `videos/` klasörünü wrangler ile doğrudan Pages'e yükler.
-   Çalışması için repo Settings → Secrets and variables → Actions altında iki secret gerekir:
-   - `CLOUDFLARE_API_TOKEN` — Cloudflare → My Profile → API Tokens → "Edit Cloudflare Workers" şablonu
-   - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare panelinin sağ sütunundaki Account ID
-   Pages proje adı `dida-website` değilse Variables sekmesine `CLOUDFLARE_PAGES_PROJECT` ekleyin.
-   Secret'lar yoksa iş atlanır, CI kırmızıya dönmez. Actions sekmesinden "Run workflow" ile elle de tetiklenebilir.
+Panelde "disconnected from your Git account" uyarısı görürseniz Settings → Builds → Manage ile GitHub yetkisini yenileyin; sonrasında bir push build'i yeniden tetikler.
 
 Deploy sonrası kontrol: `didatasarim.com/videos/aflam-1.mp4` açılıyor mu, ana sayfada kuruluş tarihi ve Ürünlerimiz görünüyor mu?
