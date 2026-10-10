@@ -131,6 +131,8 @@
     border:6px solid transparent;border-top-color:var(--ink);
   }
   .berry-tip.show{opacity:1}
+  /* köşedeki küçük dutta etiket: daha küçük, dutun hemen üstünde */
+  .berry-tip.mini{font-size:.78rem;padding:.3rem .7rem;transform:translate(-50%,-100%)}
   .webgl-fallback{
     position:absolute;inset:0;display:none;align-items:center;justify-content:center;
     text-align:center;padding:2rem;color:var(--plum);font-weight:500;
@@ -902,10 +904,16 @@ const aflamVideos = [
     hovered.getWorldPosition(tmpV);
     tmpV.project(camera);
     const r = canvas.getBoundingClientRect();
-    const x = r.left + ( tmpV.x * 0.5 + 0.5) * r.width;
-    const y = r.top  + (-tmpV.y * 0.5 + 0.5) * r.height;
-    tip.style.left = x + 'px';
-    tip.style.top  = y + 'px';
+    const mini = dockP > 0.5;
+    tip.classList.toggle('mini', mini);
+    if (mini){
+      /* küçük dutta taneler sıkışık: etiketi dutun üstüne, ortaya al */
+      tip.style.left = (r.left + r.width / 2) + 'px';
+      tip.style.top  = (r.top + r.height * 0.06) + 'px';
+    } else {
+      tip.style.left = (r.left + ( tmpV.x * 0.5 + 0.5) * r.width) + 'px';
+      tip.style.top  = (r.top  + (-tmpV.y * 0.5 + 0.5) * r.height) + 'px';
+    }
     tip.textContent = i18n[currentLang]['nav_' + hovered.userData.section];
     tip.classList.add('show');
   }
@@ -914,12 +922,13 @@ const aflamVideos = [
      sahne (hero'daki yer tutucu) ekrandan çıkarken dut, sağ alt köşedeki
      küçük boyutuna doğru akar ve sayfa boyunca bizimle gelir. */
   const DOCK_MARGIN = 18;
+  let dockP = 0;                                 /* 0 = hero'da, 1 = köşede */
   const smooth = x => x * x * (3 - 2 * x);       /* yumuşak başla, yumuşak bitir */
   function dock(){
     const r  = stage.getBoundingClientRect();
     const vw = window.innerWidth, vh = window.innerHeight;
     const travel = Math.max(1, vh * 0.85);         /* bu kadar scroll'da tamamen küçülür */
-    const p = smooth(Math.min(1, Math.max(0, window.scrollY / travel)));
+    const p = dockP = smooth(Math.min(1, Math.max(0, window.scrollY / travel)));
     const dockH = Math.min(vh * 0.26, vw < 640 ? 130 : 200);
     const sEnd  = dockH / stageH;
     const xEnd  = vw - stageW * sEnd - DOCK_MARGIN;
