@@ -241,12 +241,19 @@
   .svc p{font-size:.95rem;color:#4c2a45}
 
   /* Product links */
-  .pr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:1.4rem}
+  .pr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:1rem;margin-top:1.4rem}
   .pr{
     display:block;background:var(--paper);border:1.5px solid var(--teal-line);border-radius:18px;
     padding:1.5rem;text-decoration:none;transition:transform .25s ease, box-shadow .25s ease;
   }
   .pr:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(58,18,48,.1)}
+  .pr-logo{
+    width:44px;height:44px;border-radius:12px;margin-bottom:.9rem;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    background:var(--plum);color:#fff;font-family:var(--display);font-weight:700;
+    font-size:.95rem;letter-spacing:.02em;box-shadow:inset -2px -3px 0 rgba(58,18,48,.25);
+  }
+  .pr-logo img{width:100%;height:100%;object-fit:contain;display:block}
   .pr h3{font-size:1.1rem;margin-bottom:.4rem;color:var(--plum)}
   .pr h3 span{color:var(--magenta)}
   .pr p{font-size:.93rem;color:#4c2a45}
@@ -438,22 +445,27 @@
       </div>
       <div class="pr-grid">
         <a class="pr" href="https://www.632games.com" target="_blank" rel="noopener">
+          <span class="pr-logo" style="background:#C22C82" aria-hidden="true">632</span>
           <h3>632 Games <span aria-hidden="true">↗</span></h3>
           <p data-i="pr1_p">Çocuklar için güvenli, değerlere uygun HTML5 oyun portalımız.</p>
         </a>
         <a class="pr" href="https://plog.fit" target="_blank" rel="noopener">
+          <span class="pr-logo" style="background:#2F9440" aria-hidden="true">P</span>
           <h3>PlogFit <span aria-hidden="true">↗</span></h3>
           <p data-i="pr2_p">Yürürken çevreni temizle: plogging fitness web uygulamamız.</p>
         </a>
         <a class="pr" href="https://mddstudio.co" target="_blank" rel="noopener">
+          <span class="pr-logo" style="background:#3A1230" aria-hidden="true">MDD</span>
           <h3>MDD Studio <span aria-hidden="true">↗</span></h3>
           <p data-i="pr3_p">Kağıt, kırtasiye ve sticker markamızın online mağazası.</p>
         </a>
         <a class="pr" href="https://wasiyet.com" target="_blank" rel="noopener">
+          <span class="pr-logo" style="background:#7B2150" aria-hidden="true">W</span>
           <h3>Wasiyet <span aria-hidden="true">↗</span></h3>
           <p data-i="pr4_p">Vasiyet hazırlamayı kolaylaştıran dijital platformumuz.</p>
         </a>
         <a class="pr" href="https://ihyagame.com" target="_blank" rel="noopener">
+          <span class="pr-logo" style="background:#A91E6E" aria-hidden="true">İ</span>
           <h3>İhya Game <span aria-hidden="true">↗</span></h3>
           <p data-i="pr5_p">Değerleri oyunla anlatan oyun projemiz.</p>
         </a>
