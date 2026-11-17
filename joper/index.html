@@ -2301,7 +2301,7 @@ function toolVM(){if(VM.group)vmRoot.remove(VM.group);const g=new THREE.Group();
  VM.jaws=[];[-1,1].forEach(s=>{const j=box(.03,.05,.32,0x2a2a2a);j.position.set(s*.02,0,-.45);g.add(j);VM.jaws.push(j);});const hose=cyl(.015,.015,.4,0x111111,6);hose.rotation.x=1.2;hose.position.set(.05,-.1,.2);g.add(hose);
  [-1,1].forEach(s=>{const a=armMesh();a.position.set(s*.08,-.06,.05);a.rotation.set(-.3,s*-.2,0);g.add(a);});g.children.forEach(m=>m.castShadow=false);VM.hip.set(.1,-.22,-.4);VM.ads.copy(VM.hip);g.position.copy(VM.hip);}
 function genMetro(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,300);
- const nc=c.cars||4,L=16,gap=1.2,Z0=-36,PZ0=Math.floor(Z0-nc*(L+gap)-14);const TX=-5.75,FY=-5.8,TOP=-3.55;TDOORS.length=0;
+ const nc=c.cars||4,L=16,gap=1.2,Z0=-32,PZ0=Math.floor(Z0-nc*(L+gap)-14);const TX=-5.75,FY=-5.8,TOP=-3.55;TDOORS.length=0;
  const inPit=(x,z)=>x>-12&&x<12&&z>PZ0&&z<32;
  buildTerrain(Math.max(340,Math.abs(PZ0)*2+80),180,(x,z)=>inPit(x,z)?-7:0,(x,y,z,ny,col)=>{const n=vnoise(x*.3,z*.3)*.04;if(y<-3)col.setRGB(.26+n,.25+n,.24+n);else col.setRGB(.34+n,.35+n,.37+n);});
  const tile=0xd8dcd8,dark=0x4a4e52,conc=0x6e706e;const midZ=(PZ0+32)/2,lenZ=32-PZ0;
@@ -2317,7 +2317,7 @@ function genMetro(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,300);
  const can=box(6,.2,4,0x2a3a6a);can.position.set(4,3,33);W.group.add(can);[[1.3,31.3],[6.7,31.3],[1.3,34.7],[6.7,34.7]].forEach(([x,z])=>{const p=cyl(.07,.07,3,0x666666,6);p.position.set(x,1.5,z);W.group.add(p);});
  const ms=labelSprite('M  METRO',1);ms.position.set(4,4,35.2);W.group.add(ms);
  for(let z=-24;z<=15;z+=13)addBox(5,-6,z,.8,5.5,.8,0xc8ccc8);for(let z=-20;z<=10;z+=15){const b=box(2,.45,.5,0x6a4a2a);b.position.set(8,-5.75,z);W.group.add(b);}
- for(let x=-3;x<=9;x+=2.4)addBox(x,-6,19.5,.25,1,1.2,0x5a5e62);const ps=labelSprite('PERON 1 · TREN TÜNELDE DURDU',1);ps.position.set(3,-2.2,15);W.group.add(ps);
+ for(let x=-3;x<=9;x+=2.4)addBox(x,-6,19.5,.25,1,1.2,0x5a5e62);const ps=labelSprite('PERON 1 · TREN TÜNELDE DURDU',1);ps.position.set(3,-2.2,15);W.group.add(ps);const ps2=labelSprite('← TREN · PERON UCUNDAN RAYLARA İN',.8);ps2.position.set(-1.5,-3.4,-27);W.group.add(ps2);lampLight(-4,-2.2,-30,0xfff0c0,1.1,16);
  lampLight(3,-1.3,-10,0xf0f4ff,1.2,26);lampLight(3,-1.3,12,0xf0f4ff,1.0,22);
  // tunnel: rails, sleepers, cable trays, dim lights, exit signs
  [-6.47,-5.03].forEach(x=>{const r=box(.08,.12,lenZ,0x8a8e90);r.position.set(x,-6.94,midZ);r.castShadow=false;W.group.add(r);});
@@ -2356,6 +2356,8 @@ function genMetro(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,300);
   const cn=textTex(String(3417+k),128,40,'bold 30px Arial','#222',null);[-1,1].forEach(s=>{const t=new THREE.Mesh(new THREE.PlaneGeometry(.6,.18),new THREE.MeshBasicMaterial({map:cn,transparent:true}));t.position.set(TX+s*1.51,FY+.55,ze+1.2);t.rotation.y=s*Math.PI/2;W.group.add(t);});
   const ce=[];const ne=(c.per||2)+(k%2);for(let i=0;i<ne;i++)ce.push(spawnEnemy(TX+rand(-.45,.45),ze+2+Math.random()*(L-4),{y:FY,static:true,yaw:Math.random()<.5?0:Math.PI,crouch:Math.random()<.3}));
   if((k===1||k===nc-1)&&host.length<(c.hostage||1)){const h=spawnHostage(TX-.2,ze+L*.5,Math.PI/2);h.pos.y=FY;h.m.root.position.y=FY;host.push(h);}
+  if(k<2)lampLight(TX,TOP-.4,zc,0xeef4ff,k?.8:1.1,13);
+  if(k===0)lampLight(TX,FY+.5,zs+2.2,0xfff4d0,1.3,12);
   spawnDummy(TX-1.1,ze+3,false,Math.PI/2,FY);cars.push(ce);}
  const plat=[];for(let i=0;i<(c.plat||4);i++)plat.push(spawnEnemy(rand(5.8,9),rand(-26,10),{y:-6,leash:12,crouch:Math.random()<.5,yaw:rand(-3,3)}));
  plat.push(spawnEnemy(4,16,{y:-6,static:true,yaw:0}),spawnEnemy(7,14,{y:-6,static:true,yaw:.3,gun:'pkm'}));
