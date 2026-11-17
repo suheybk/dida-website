@@ -712,10 +712,10 @@ function rayTerrain(o,d,maxT){
   if(dh<0){let a=t-step,b=t;for(let i=0;i<6;i++){const m=(a+b)/2;if(o.y+d.y*m-terrainH(o.x+d.x*m,o.z+d.z*m)<0)b=m;else a=m;}return b;}
   step=clamp(dh*.5,.4,4);}
  return -1;}
-function rayWorld(o,d,maxT,skip=null){
+function rayWorld(o,d,maxT,skip=null,noAllies=false){
  let best={t:maxT,type:null};const tt=rayTerrain(o,d,best.t);if(tt>=0&&tt<best.t)best={t:tt,type:'terrain'};
  for(const c of W.colliders){if(!c.active)continue;const t=rayBox(o,d,c.box,best.t);if(t>=0&&t<best.t){best={t,type:'col',c,n:rayBox.n};}}
- for(const h of W.hittables){if(h===skip)continue;const r=actorRay(h,o,d,best.t);if(r&&r.t<best.t)best={t:r.t,type:'actor',a:h,part:r.part};}
+ for(const h of W.hittables){if(h===skip||(noAllies&&h.kind==='ally'))continue;const r=actorRay(h,o,d,best.t);if(r&&r.t<best.t)best={t:r.t,type:'actor',a:h,part:r.part};}
  return best;}
 const _d=V3(),_o=V3();
 function los(a,b,useSmoke=true){
@@ -929,7 +929,7 @@ function muzzleWorld(){if(!VM.muzzle)return camera.position.clone();const p=VM.m
  const v=p.clone();v.applyMatrix4(vmCam.matrixWorldInverse);// view space
  v.applyMatrix4(camera.matrixWorld);return v;}
 function shoot(o,dir,rng,dmg,isPlayer,def){
- const h=rayWorld(o,dir,rng,isPlayer?null:undefined);lastHitT=h.t;const p=o.clone().addScaledVector(dir,h.t);
+ const h=rayWorld(o,dir,rng,null,isPlayer);lastHitT=h.t;const p=o.clone().addScaledVector(dir,h.t);
  if(h.type==='actor'){const a=h.a;
   if(a.kind==='ally'){if(isPlayer&&G.time-(G.lastFF||-9)>2){G.lastFF=G.time;feed('Dost ateşi! Ateşi kes!','#ff8a8a');radio(a.name,'Komutanım dikkat, bize ateş ediyorsun!',2.5);}return 'miss';}
   if(a.kind==='paper'){if(!a.dead){a.dead=true;a.downT=0;G.stats.kills+=0;burst(p,3,'dust');return 'kill';}return 'miss';}
@@ -2227,6 +2227,6 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.
 (function boot(){const s=store.get('sel',null);if(s){if(WEAPONS[s.primary]&&WEAPONS[s.primary].cat!=='PST')G.sel.primary=s.primary;if(WEAPONS[s.secondary]&&WEAPONS[s.secondary].cat==='PST')G.sel.secondary=s.secondary;if(DIFF[s.diff])G.sel.diff=s.diff;}
  clearWorld();buildMenuWorld();applyQuality();G.state='menu';showScreen('menu');$('loading').remove();loop();
  if(matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches){const n=document.querySelector('#scrMenu .note');n.innerHTML+='<br><b style="color:var(--warn)">Bu oyun klavye ve fare ister; telefonda oynanamaz.</b>';}
- window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer};
+ window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer,rayWorld,los};
 })();
 </script>
