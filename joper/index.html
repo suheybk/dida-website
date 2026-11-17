@@ -720,7 +720,7 @@ function buildGunModel(def){
  if(def.sup){const s=cyl(.02,.02,.18,0x111111,10);s.rotation.x=Math.PI/2;add(s,0,.01,-L*.83-.09);}
  const mz=new THREE.Object3D();mz.position.set(0,.01,-L*.83-(def.sup?.18:0));g.add(mz);return{g,sightY,muzzle:mz};
 }
-function armMesh(){const g=new THREE.Group();const sl=box(.075,.075,.34,0x1a1c20);sl.position.z=.17;g.add(sl);const gl=box(.07,.07,.09,0x0e0e0f);gl.position.z=-.03;g.add(gl);g.children.forEach(m=>m.castShadow=false);return g;}
+function armMesh(){const g=new THREE.Group();const sl=box(.058,.058,.3,0x1a1c20);sl.position.z=.17;g.add(sl);const gl=box(.07,.07,.09,0x0e0e0f);gl.position.z=-.03;g.add(gl);g.children.forEach(m=>m.castShadow=false);return g;}
 function buildVM(){
  if(VM.group)vmRoot.remove(VM.group);const g=new THREE.Group();VM.group=g;vmRoot.add(g);VM.muzzle=null;VM.shield=null;VM.flash=null;
  const flashM=new THREE.Mesh(new THREE.PlaneGeometry(.18,.18),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(x)=>{const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,240,200,1)');gr.addColorStop(.3,'rgba(255,190,90,.9)');gr.addColorStop(1,'rgba(255,120,30,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);}),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
@@ -730,7 +730,7 @@ function buildVM(){
   VM.hip.set(.2,-.3,-.52);VM.ads.copy(VM.hip);g.rotation.y=-.12;g.children.forEach(m=>m.castShadow=false);return;}
  const w=curW();const gm=buildGunModel(w.def);g.add(gm.g);VM.muzzle=gm.muzzle;VM.sightY=gm.sightY;
  const ar=armMesh();ar.position.set(.03,-.07,.12);ar.rotation.set(-.3,.15,0);g.add(ar);
- if(w.def.cat!=='PST'){const al=armMesh();al.position.set(-.06,-.05,-w.def.len*.45);al.rotation.set(-.2,-.5,0);g.add(al);}else{const al=armMesh();al.position.set(-.04,-.08,.1);al.rotation.set(-.3,-.25,0);g.add(al);}
+ if(w.def.cat!=='PST'){const al=armMesh();al.position.set(-.035,-.06,-w.def.len*.4);al.rotation.set(.75,-.55,0);g.add(al);}else{const al=armMesh();al.position.set(-.04,-.08,.1);al.rotation.set(-.3,-.25,0);g.add(al);}
  flashM.position.copy(gm.muzzle.position);flashM.visible=false;g.add(flashM);VM.flash=flashM;
  if(P.slot===4){VM.kind='shield';const sh=new THREE.Group();
   [[.55,.605,0,-.1225],[.55,.145,0,.3525],[.125,.1,-.2125,.23],[.125,.1,.2125,.23]].forEach(([w2,h2,x,y])=>{const p=box(w2,h2,.03,0x1b1f24);p.castShadow=false;p.position.set(x,y,0);sh.add(p);});
@@ -1019,8 +1019,9 @@ function updateAllies(dt){
   if(a.downed){a.m.root.position.copy(a.pos);continue_ally(a);return;}
   // follow
   let des=null;if(teamHold&&a.holdPos)des=a.holdPos;
-  if(!des){const idx=cr.length-1-Math.round((i+1)*.95/.25);des=cr[Math.max(0,idx)]||P.pos;}
-  const pd=Math.hypot(des.x-P.pos.x,des.z-P.pos.z);if(!teamHold&&pd<.8+i*.85){const ad=Math.hypot(a.pos.x-P.pos.x,a.pos.z-P.pos.z);des=ad<2?V3(P.pos.x+(a.pos.x-P.pos.x)/(ad||1)*2.6,a.pos.y,P.pos.z+(a.pos.z-P.pos.z)/(ad||1)*2.6):a.pos;}
+  else if(a.role==='shield'){const cand=V3(P.pos.x+fwd.x*2.3+fwd.z*.65,P.pos.y,P.pos.z+fwd.z*2.3-fwd.x*.65);const e1=V3(P.pos.x,P.pos.y+1.2,P.pos.z),e2=V3(cand.x,P.pos.y+1.2,cand.z);if(los(e1,e2,false)&&!insideCollider(cand))des=cand;}
+  if(!des){const idx=cr.length-1-Math.round(Math.max(1,i)*.95/.25);des=cr[Math.max(0,idx)]||P.pos;}
+  const pd=Math.hypot(des.x-P.pos.x,des.z-P.pos.z);if(!teamHold&&a.role!=='shield'&&pd<.8+Math.max(1,i)*.85){const ad=Math.hypot(a.pos.x-P.pos.x,a.pos.z-P.pos.z);des=ad<2?V3(P.pos.x+(a.pos.x-P.pos.x)/(ad||1)*2.6,a.pos.y,P.pos.z+(a.pos.z-P.pos.z)/(ad||1)*2.6):a.pos;}
   const dx=des.x-a.pos.x,dz=des.z-a.pos.z;const d=Math.hypot(dx,dz);let spd=0;
   if(d>.25){spd=d>8?6.4:d>2?5:Math.max(1.2,P.speed);if(a.target&&d<6)spd*=.6;const st=Math.min(d,spd*dt);const bx=a.pos.x,bz=a.pos.z;moveActor(a,dx/d*st,dz/d*st);
    const moved=Math.hypot(a.pos.x-bx,a.pos.z-bz);if(moved<st*.3)a.stuck+=dt;else a.stuck=Math.max(0,a.stuck-dt);}
@@ -1032,7 +1033,7 @@ function updateAllies(dt){
    if(best&&best!==a.target){a.target=best;a.react=rand(.4,.9);if(a.talkCD<=0){a.talkCD=6;radio(a.name,pick(['Temas! Saat '+clockDir(best.pos)+' yönünde!','Hedef görüldü, ateş ediyorum!','Düşman '+Math.round(bd)+' metrede!']),2.5);}}
    if(!best)a.target=null;}
   a.talkCD-=dt;
-  let face=Math.atan2(dx,dz);if(d<=.4)face=P.yaw+Math.PI;
+  let face=Math.atan2(dx,dz);if(d<=.4||(a.role==='shield'&&d<1.5))face=P.yaw+Math.PI;
   const stackPose=!a.target&&a.role!=='shield';const m=a.m;
   if(stackPose){m.up.rotation.y=lerp(m.up.rotation.y,(i%2?-.55:.55),dt*6);m.armL.rotation.set(-1.75,0,.15);}
   else if(a.role!=='shield'){m.up.rotation.y=lerp(m.up.rotation.y,0,dt*8);m.armL.rotation.set(-1.35,0,-.55);}
@@ -1044,14 +1045,14 @@ function updateAllies(dt){
  });
  // separation
  const bodies=W.allies.filter(a=>!a.downed);for(let i=0;i<bodies.length;i++){const a=bodies[i];for(let j=i+1;j<bodies.length;j++){const b=bodies[j];const dx=b.pos.x-a.pos.x,dz=b.pos.z-a.pos.z;const d=Math.hypot(dx,dz);if(d<.75&&d>1e-4){const k=(.75-d)/2/d;a.pos.x-=dx*k;a.pos.z-=dz*k;b.pos.x+=dx*k;b.pos.z+=dz*k;}}
-  const dx=a.pos.x-P.pos.x,dz=a.pos.z-P.pos.z;const d=Math.hypot(dx,dz);const minD=.8;if(d<minD&&d>1e-4){a.pos.x+=dx/d*(minD-d);a.pos.z+=dz/d*(minD-d);}resolveCircle(a.pos,.3,1.7);a.m.root.position.copy(a.pos);}
+  const dx=a.pos.x-P.pos.x,dz=a.pos.z-P.pos.z;const d=Math.hypot(dx,dz);const minD=a.role==='shield'?1.6:.8;if(d<minD&&d>1e-4){a.pos.x+=dx/d*(minD-d);a.pos.z+=dz/d*(minD-d);}resolveCircle(a.pos,.3,1.7);a.m.root.position.copy(a.pos);}
  // hostages follow
  for(const h of W.hostages){if(h.dead){animDeath(h,dt);continue;}if(!h.freed)continue;const c=cr[Math.max(0,cr.length-9)]||P.pos;const dx=c.x-h.pos.x,dz=c.z-h.pos.z;const d=Math.hypot(dx,dz);if(d>1){const s=Math.min(d,(d>4?5:3)*dt);moveActor(h,dx/d*s,dz/d*s);animWalk(h,dt,3);h.yaw=Math.atan2(dx,dz);}if(h.pos.distanceTo(P.pos)>18){const bp=V3(P.pos.x+Math.sin(P.yaw)*2.2,P.pos.y,P.pos.z+Math.cos(P.yaw)*2.2);if(!insideCollider(bp))h.pos.copy(bp);}h.m.root.position.copy(h.pos);h.m.root.rotation.y=h.yaw;}
  for(const t of W.targets){if(t.dead){if(t.paper){t.downT=(t.downT||0)+dt;t.pv.rotation.x=-Math.min(1,t.downT*5)*Math.PI/2;}else animDeath(t,dt);}}
 }
 function continue_ally(a){}
 function seedCrumbs(){W.crumbs=[];const bx=Math.sin(P.yaw),bz=Math.cos(P.yaw);for(let k=24;k>=0;k--){const c=V3(P.pos.x+bx*k*.25,P.pos.y,P.pos.z+bz*k*.25);if(!insideCollider(c))W.crumbs.push(c);}if(!W.crumbs.length)W.crumbs.push(P.pos.clone());
- W.allies.forEach((a,i)=>{const c=W.crumbs[Math.max(0,W.crumbs.length-1-Math.round((i+1)*.95/.25))];a.pos.set(c.x,groundAt(c.x,c.z,terrainH(c.x,c.z)),c.z);a.yaw=P.yaw+Math.PI;a.m.root.position.copy(a.pos);});}
+ W.allies.forEach((a,i)=>{let c=W.crumbs[Math.max(0,W.crumbs.length-1-Math.round(Math.max(1,i)*.95/.25))];if(a.role==='shield'){const f=V3(P.pos.x-Math.sin(P.yaw)*2.3,0,P.pos.z-Math.cos(P.yaw)*2.3);if(!insideCollider(f))c=f;}a.pos.set(c.x,groundAt(c.x,c.z,terrainH(c.x,c.z)),c.z);a.yaw=P.yaw+Math.PI;a.m.root.position.copy(a.pos);});}
 function insideCollider(p){for(const c of W.colliders){if(!c.active)continue;const b=c.box;if(p.x>b.min.x-.3&&p.x<b.max.x+.3&&p.z>b.min.z-.3&&p.z<b.max.z+.3&&p.y+1>b.min.y&&p.y+.4<b.max.y)return true;}return false;}
 function clockDir(p){const a=Math.atan2(-(p.x-P.pos.x),-(p.z-P.pos.z));let r=angDiff(P.yaw,a);let h=Math.round(-r/(Math.PI/6));h=((h%12)+12)%12;return h===0?12:h;}
 function allyShoot(a,e){const mz=V3(a.pos.x+Math.sin(a.yaw)*.7,a.pos.y+a.hipY+.42,a.pos.z+Math.cos(a.yaw)*.7);const tp=V3(e.pos.x,e.pos.y+e.hipY+.35,e.pos.z);const d=mz.distanceTo(tp);
