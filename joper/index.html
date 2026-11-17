@@ -1243,8 +1243,8 @@ function vehInterior(v){
   const bk=box(.14,.62,.46,olive);bk.position.set(x+sx*.26,fy+.8,z);g.add(bk);const hr=box(.16,.2,.42,olive);hr.position.set(x+sx*.24,fy+1.22,z);hr.rotation.z=sx*.15;g.add(hr);
   const ft=box(.36,.06,.4,0x4a4e52);ft.position.set(x-sx*.05,fy+.04,z);g.add(ft);
   [-1,1].forEach(k=>{const st=box(.02,.6,.04,0x111111);st.position.set(x+sx*.18,fy+.8,z+k*.13);g.add(st);});const lg=new THREE.Mesh(new THREE.CircleGeometry(.05,14),new THREE.MeshBasicMaterial({map:TEX.seatlogo}));lg.position.set(x+sx*.185,fy+.95,z);lg.rotation.y=sx>0?-Math.PI/2:Math.PI/2;g.add(lg);
-  if(taken&&v.type!=='minibus'&&false){const m=makeHuman(Object.assign({},UNI.ally,{gunDef:WEAPONS.find(w=>w.name==='MKE MPT-76')}));m.root.position.set(x-sx*.02,fy-.04,z);m.root.rotation.y=sx<0?Math.PI/2:-Math.PI/2;m.hips.position.y=.5;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;g.add(m.root);}};
- for(let i=0;i<nz;i++){const z=z0+.75+i*.62;[-1,1].forEach(sx=>seat(sx,z,i>=nz-2&&!(sx>0&&i===nz-1)));}
+  if(taken){const m=makeHuman(Object.assign({},UNI.ally,{gunDef:WEAPONS.find(w=>w.name==='MKE MPT-76')}));m.root.position.set(x+sx*.1,fy-.02,z);m.root.rotation.y=sx<0?Math.PI/2:-Math.PI/2;m.hips.position.y=.5;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;g.add(m.root);}};
+ for(let i=0;i<nz;i++){const z=z0+.75+i*.62;[-1,1].forEach(sx=>seat(sx,z,i>=1));}
  const con=box(.5,.7,.35,mint);con.position.set(0,fy+.35,z1-.35);g.add(con);const scr=box(.34,.26,.05,0xdde2e4);scr.position.set(0,fy+.95,z1-.4);g.add(scr);const sc=new THREE.Mesh(new THREE.PlaneGeometry(.26,.18),new THREE.MeshBasicMaterial({color:0x5a7a8a}));sc.position.set(0,fy+.95,z1-.43);sc.rotation.y=Math.PI;g.add(sc);
  const lt=new THREE.PointLight(0xfff4e8,.9,6,2);lt.position.set(0,cy-.3,zc);g.add(lt);
  g.traverse(o=>{if(o.isMesh)o.castShadow=false;});v.inside={fy,z0,z1};return g;}
