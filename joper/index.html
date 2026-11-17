@@ -1238,7 +1238,7 @@ const VPAL={ejder:{seat:0x6f7340,frame:0x9fd6bf,floor:0x9a8466,wall:0x3a3e40,cei
  yoruk:{seat:0x4f5232,frame:0x7a6a4a,floor:0x8a7656,wall:0xb8a682,ceil:0x8f7f5f,light:0xffe0b0}};
 function seatedSoldier(g,x,y,z,yaw){const m=makeHuman(Object.assign({},UNI.ally,{gunDef:WEAPONS.find(w=>w.name==='MKE MPT-76')}));m.root.position.set(x,y,z);m.root.rotation.y=yaw;m.hips.position.y=.5;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;g.add(m.root);return m;}
 function vehInterior(v){
- v.exterior=v.g.children.slice();const g=new THREE.Group();v.g.add(g);const hw=v.Wd/2-.14,fy=Math.max(.75,v.H*.32),cy=v.H*.97,z0=-v.L/2+.12,z1=v.L*.22,L=z1-z0,zc=(z0+z1)/2;
+ v.exterior=v.g.children.slice();const g=new THREE.Group();v.g.add(g);v.interior=g;const hw=v.Wd/2-.14,fy=Math.max(.75,v.H*.32),cy=v.H*.97,z0=-v.L/2+.12,z1=v.L*.22,L=z1-z0,zc=(z0+z1)/2;
  const pl=(w,hh,col,x,y,z,ry,rx,map,op)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,hh),new THREE.MeshPhongMaterial({color:col,side:THREE.DoubleSide,shininess:map===TEX.diamond?30:8,map:map||null,transparent:!!op,opacity:op||1,depthWrite:!op}));m.position.set(x,y,z);if(ry)m.rotation.y=ry;if(rx)m.rotation.x=rx;g.add(m);return m;};
  if(v.type==='minibus'){ // passenger van like the reference photo
   const wl=0xc9cdd2,cl=0xdfe3e6;const wy0=fy+.85,wy1=cy-.32;
@@ -1296,7 +1296,7 @@ function startCine(m,veh){
 function roadPoint(road,dist){let acc=0;for(let i=1;i<road.length;i++){const s=road[i].distanceTo(road[i-1]);if(acc+s>=dist){const t=(dist-acc)/s;return{p:road[i-1].clone().lerp(road[i],t),dir:V3().subVectors(road[i],road[i-1]).normalize()};}acc+=s;}const n=road.length;return{p:road[n-1].clone(),dir:V3().subVectors(road[n-1],road[n-2]).normalize()};}
 function poseVehicle(v,road,dist,sp){const rp=roadPoint(road,dist);const p=rp.p;const yaw=Math.atan2(rp.dir.x,rp.dir.z);const gF=terrainH(p.x+rp.dir.x*2,p.z+rp.dir.z*2),gB=terrainH(p.x-rp.dir.x*2,p.z-rp.dir.z*2);
  p.y=(gF+gB)/2;const pitch=-Math.atan2(gF-gB,4);v.g.position.copy(p);v.g.rotation.set(0,yaw,0);v.g.rotateX(pitch);if(sp>0)v.g.position.y+=Math.sin(G.time*13)*.02;v.wheels.forEach(w=>w.rotation.x+=sp*.016/.6);v.g.updateMatrixWorld(true);}
-function setExterior(v,vis){if(v.exterior&&v.extVis!==vis){v.extVis=vis;v.exterior.forEach(o=>o.visible=vis);}}
+function setExterior(v,vis){if(v.exterior&&v.extVis!==vis){v.extVis=vis;v.exterior.forEach(o=>o.visible=vis);if(v.interior)v.interior.visible=!vis;}}
 function heliPose(h,pos,yaw,bank){h.g.position.copy(pos);h.g.rotation.set(0,yaw,0);h.g.rotateZ(bank||0);h.g.updateMatrixWorld(true);}
 function camFrom(obj,lp,ll){const c=lp.clone().applyMatrix4(obj.matrixWorld);camera.position.copy(c);camera.lookAt(ll.clone().applyMatrix4(obj.matrixWorld));return c;}
 // ---------- ride (player controls a mounted gun) ----------
