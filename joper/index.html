@@ -1336,14 +1336,48 @@ function buildVehicle(type){
  const g=new THREE.Group();const wheels=[];let L=6,Wd=2.5,H=2.6;
  const addW=(x,z,r,w)=>{const wh=wheel(r,w);wh.position.set(x,r,z);g.add(wh);wheels.push(wh);};
  const glass=0x1d2a33;
- if(type==='ejder'){const c=0x4b5249;L=6.2;Wd=2.55;H=2.75;
-  const hull=box(2.5,1.25,6,c);hull.position.y=1.15;g.add(hull);const cab=box(2.4,.95,4.3,c);cab.position.set(0,2.25,-.4);g.add(cab);
-  const nose=box(2.45,.7,1.2,c);nose.position.set(0,1.95,2.25);nose.rotation.x=.42;g.add(nose);
-  for(let i=0;i<3;i++){[1,-1].forEach(s=>{const w=box(.02,.42,.6,glass);w.position.set(s*1.21,2.35,-1.6+i*1.15);g.add(w);});}
-  const ws=box(2.1,.55,.05,glass);ws.position.set(0,2.4,1.86);ws.rotation.x=-.35;g.add(ws);
-  const grill=box(1.6,.5,.06,0x2a2e2a);grill.position.set(0,1.35,3.01);g.add(grill);[-.85,.85].forEach(x=>{const l=box(.35,.14,.05,0xe8e8d0);l.position.set(x,1.65,3.02);g.add(l);});
-  const rw=box(.5,.4,.6,0x30342f);rw.position.set(0,2.95,-.5);g.add(rw);const gb=cyl(.04,.04,1.2,0x111111,6);gb.rotation.x=Math.PI/2;gb.position.set(0,3.0,.2);g.add(gb);
-  [-2.1,2.1].forEach(z=>{addW(-1.25,z,.62,.45);addW(1.25,z,.62,.45);});jandText(g,2.5,1.25,-.4,2.2);}
+ if(type==='ejder'){L=6.2;Wd=2.55;H=2.75;
+  const camo=canvasTex(128,128,(x,w,h)=>{x.fillStyle='#434845';x.fillRect(0,0,w,h);const cs=['#383c39','#4d524e','#303431','#515650'];for(let i=0;i<40;i++){x.fillStyle=cs[i%4];x.beginPath();x.ellipse(Math.random()*w,Math.random()*h,rand(6,20),rand(4,10),Math.random()*3,0,7);x.fill();}for(let i=0;i<400;i++){x.fillStyle='rgba(0,0,0,.08)';x.fillRect(Math.random()*w,Math.random()*h,1,1);}});
+  camo.wrapS=camo.wrapT=THREE.RepeatWrapping;camo.repeat.set(.35,.35);const M1=new THREE.MeshPhongMaterial({map:camo,shininess:14,specular:0x222222});const dk=lam(0x262a28),blk=lam(0x121413);
+  const gl=new THREE.MeshPhongMaterial({color:0x3a5f80,shininess:90,specular:0xaaccee,transparent:true,opacity:.85});
+  // side-profile extruded armored body (z forward, y up)
+  const pr=new THREE.Shape();[[-3.05,.75],[-3.05,2.72],[-2.9,2.78],[.5,2.78],[1.32,1.98],[2.7,1.76],[3.05,1.6],[3.1,1.05],[2.85,.68],[-2.85,.62]].forEach(([z,y],i)=>i?pr.lineTo(z,y):pr.moveTo(z,y));
+  const bodyG=new THREE.ExtrudeGeometry(pr,{depth:2.3,bevelEnabled:true,bevelThickness:.1,bevelSize:.08,bevelSegments:2});bodyG.translate(0,0,-1.15);const body=new THREE.Mesh(bodyG,M1);body.rotation.y=-Math.PI/2;body.castShadow=body.receiveShadow=true;g.add(body);
+  // belly V-hull and chassis
+  [-1,1].forEach(s=>{const v=box(1.1,.35,5.4,dk);v.position.set(s*.45,.62,0);v.rotation.z=s*.35;g.add(v);});
+  // fenders over wheels (angular)
+  [[-1,2.05],[1,2.05],[-1,-2.05],[1,-2.05]].forEach(([s,z])=>{const f=box(.42,.32,1.7,M1);f.material=M1;f.position.set(s*1.22,1.42,z);g.add(f);const f2=box(.3,.12,1.6,dk);f2.position.set(s*1.33,1.22,z);f2.rotation.z=s*-.6;g.add(f2);const lip=box(.08,.5,.12,dk);lip.position.set(s*1.4,1.05,z+.85*(z>0?1:-1));g.add(lip);});
+  // front: grille, lights, bumper, tow hooks, chains
+  const gr=box(1.05,.62,.08,blk);gr.position.set(0,1.32,3.16);g.add(gr);for(let i=0;i<6;i++){const b=box(1.0,.05,.06,0x3a3e3c);b.position.set(0,1.08+i*.1,3.2);g.add(b);}
+  const gf=box(1.25,.08,.1,dk);gf.position.set(0,1.66,3.14);g.add(gf);
+  [-1,1].forEach(s=>{const lb=box(.5,.22,.1,blk);lb.position.set(s*.86,1.55,3.08);g.add(lb);[-.1,.1].forEach(dx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.16,.14,.02),new THREE.MeshBasicMaterial({color:0xf2f2e8}));l.position.set(s*.86+dx,1.55,3.14);g.add(l);});
+   const am=new THREE.Mesh(new THREE.BoxGeometry(.14,.07,.02),new THREE.MeshBasicMaterial({color:0xffa030}));am.position.set(s*.86,1.38,3.12);g.add(am);const sl=box(.22,.32,.08,blk);sl.position.set(s*.86,1.08,3.1);g.add(sl);for(let i=0;i<3;i++){const b=box(.2,.03,.04,0x3a3e3c);b.position.set(s*.86,.98+i*.1,3.14);g.add(b);}
+   const hk=box(.08,.12,.18,0x1a1a1a);hk.position.set(s*.55,.78,3.1);g.add(hk);for(let i=0;i<4;i++){const ch=box(.04,.08,.04,0x2a2a2a);ch.position.set(s*.55,.65-i*.08,3.15);ch.rotation.y=i%2?.8:0;g.add(ch);}});
+  const bump=box(2.3,.26,.22,dk);bump.position.set(0,.78,3.05);g.add(bump);const plate=box(.5,.12,.02,0xd8d8d0);plate.position.set(0,.8,3.17);g.add(plate);
+  // windshield (two panes) with protective mesh cage
+  const wsL=Math.hypot(.82,.8),wsA=Math.atan2(.8,.82);[-1,1].forEach(s=>{const p=box(1.0,wsL*.92,.03,0);p.material=gl;p.position.set(s*.56,2.39,.93);p.rotation.x=-(Math.PI/2-wsA);g.add(p);});
+  const cage=new THREE.Group();for(let i=0;i<=10;i++){const b=box(.02,wsL,.02,0x1a1c1b);b.position.x=-1.08+i*.216;cage.add(b);}for(let j=0;j<=5;j++){const b=box(2.2,.02,.02,0x1a1c1b);b.position.y=-wsL/2+j*wsL/5;cage.add(b);}
+  cage.position.set(0,2.39,1.0);cage.rotation.x=-(Math.PI/2-wsA);g.add(cage);const pil=box(.1,wsL,.06,dk);pil.position.set(0,2.39,.95);pil.rotation.x=-(Math.PI/2-wsA);g.add(pil);
+  // side windows with frames + firing ports, doors, handles, steps
+  [-1,1].forEach(s=>{const x=s*1.24;[-2.35,-1.45,-.55,.3].forEach((z,i)=>{const fr=box(.04,.5,.52,blk);fr.position.set(x,2.28,z);g.add(fr);const w=box(.03,.38,.4,0);w.material=gl;w.position.set(x+s*.015,2.28,z);g.add(w);
+    const fp=box(.04,.1,.1,0x111111);fp.position.set(x,1.85,z);g.add(fp);});
+   [[-1.0,.95],[.3,.9]].forEach(([z,w])=>{const sm=box(.02,1.45,.02,0x1c1f1d);sm.position.set(x+s*.03,1.75,z-w/2);g.add(sm);const sm2=sm.clone();sm2.position.z=z+w/2;g.add(sm2);const hd=box(.05,.05,.25,0x1a1a1a);hd.position.set(x+s*.05,1.7,z+w/2-.2);g.add(hd);});
+   const stp=box(.25,.05,.9,0x2a2e2c);stp.position.set(s*1.33,.82,-.35);g.add(stp);const gh=box(.04,.04,.6,0x1a1a1a);gh.position.set(x+s*.06,2.05,-2.75);g.add(gh);
+   const arm=box(.05,.05,.7,0x1a1a1a);arm.position.set(s*1.45,2.2,1.35);arm.rotation.y=s*.6;g.add(arm);const pole=box(.04,.55,.04,0x1a1a1a);pole.position.set(s*1.62,2.35,1.62);g.add(pole);const mir=box(.04,.38,.3,0x1a1c1b);mir.position.set(s*1.64,2.62,1.64);g.add(mir);});
+  // roof: RCWS turret, lights, antennas, rails
+  const rb=cyl(.32,.36,.18,0x30342f,12);rb.position.set(-.45,2.92,.0);g.add(rb);const tur=box(.55,.42,.6,M1);tur.material=M1;tur.position.set(-.45,3.2,0);g.add(tur);const sens=box(.22,.2,.22,blk);sens.position.set(-.18,3.25,.3);g.add(sens);
+  const lens=new THREE.Mesh(new THREE.CircleGeometry(.06,10),new THREE.MeshBasicMaterial({color:0x223344}));lens.position.set(-.18,3.25,.415);g.add(lens);const gun=cyl(.03,.035,1.25,0x111111,8);gun.rotation.x=Math.PI/2;gun.position.set(-.6,3.22,.75);g.add(gun);const box2=box(.18,.25,.3,blk);box2.position.set(-.78,3.12,-.1);g.add(box2);
+  const lbar=box(.5,.12,.18,blk);lbar.position.set(.55,2.88,.35);g.add(lbar);[-.15,.15].forEach(dx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.02),new THREE.MeshBasicMaterial({color:dx<0?0xff3030:0x3060ff}));l.position.set(.55+dx,2.9,.45);g.add(l);});
+  const spot=box(.2,.18,.18,blk);spot.position.set(.0,2.93,.4);g.add(spot);const sl2=new THREE.Mesh(new THREE.CircleGeometry(.07,10),new THREE.MeshBasicMaterial({color:0xf0f0e0}));sl2.position.set(0,2.93,.495);g.add(sl2);
+  [-1,1].forEach(s=>{const rr=box(.05,.05,3.4,0x1a1c1b);rr.position.set(s*1.05,2.86,-1.3);g.add(rr);const an=cyl(.012,.012,1.4,0x111111,5);an.position.set(s*.9,3.5,-2.7);g.add(an);});
+  for(let i=0;i<3;i++){const hb=box(.6,.12,.4,dk);hb.position.set(.4,2.86,-1.1-i*.8);g.add(hb);}
+  // rear: door, spare tire, ladder
+  const rd=box(1.1,1.6,.04,dk);rd.position.set(-.15,1.75,-3.17);g.add(rd);const rw2=box(.4,.35,.03,0);rw2.material=gl;rw2.position.set(-.15,2.25,-3.2);g.add(rw2);
+  const sp=wheel(.55,.4);sp.rotation.y=Math.PI/2;sp.position.set(.82,1.55,-3.4);g.add(sp);for(let i=0;i<4;i++){const ld=box(.4,.04,.06,0x1a1a1a);ld.position.set(-.85,1.0+i*.35,-3.2);g.add(ld);}
+  // big off-road wheels with tread blocks
+  [-2.05,2.05].forEach(z=>{[-1,1].forEach(s=>{const wh=new THREE.Group();const t=cyl(.62,.62,.5,0x161616,20);t.rotation.z=Math.PI/2;wh.add(t);for(let k=0;k<14;k++){const tb=box(.52,.09,.16,0x101010);const a=k/14*Math.PI*2;tb.position.set(0,Math.cos(a)*.63,Math.sin(a)*.63);tb.rotation.x=-a;wh.add(tb);}
+    const hub=cyl(.32,.32,.52,0x3a3d38,8);hub.rotation.z=Math.PI/2;wh.add(hub);const hc=cyl(.12,.14,.56,0x2a2c28,6);hc.rotation.z=Math.PI/2;wh.add(hc);wh.position.set(s*1.22,.62,z);g.add(wh);wheels.push(wh);});});
+  jandText(g,2.7,1.45,-1.2,2.0);}
  else if(type==='kirpi'){const c=0x6b6a4f;L=6.6;Wd=2.5;H=3.1;
   const hull=box(2.3,1.3,6.3,c);hull.position.y=1.45;g.add(hull);const cab=box(2.5,1.25,4.2,c);cab.position.set(0,2.7,-.8);g.add(cab);const front=box(2.5,1.0,1.9,c);front.position.set(0,2.4,2.3);g.add(front);
   const ws=box(2.2,.6,.05,glass);ws.position.set(0,2.95,1.36);g.add(ws);[1,-1].forEach(s=>{for(let i=0;i<3;i++){const w=box(.02,.45,.45,glass);w.position.set(s*1.26,2.9,-2.2+i*1.1);g.add(w);}});
