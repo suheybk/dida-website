@@ -1133,10 +1133,10 @@ function startMission(id){
  G.missionStart=G.time;
 }
 function renderObjectives(){if(!M)return;const html=['<div class="t">'+M.def.name.toUpperCase()+'</div>'];let curSet=false;
- M.obj.forEach((o,i)=>{if(o.hidden&&!o.done&&i>M.objIdx)return;const cls=o.done?'done':(!curSet?(curSet=true,'cur'):'');html.push(`<div class="o ${cls}">${o.text}${o.prog?` <span style="color:var(--muted);font-family:var(--mono);font-size:13px">${o.prog()}</span>`:''}</div>`);});$('objectives').innerHTML=html.join('');}
+ M.obj.forEach((o,i)=>{if(o.hidden&&!o.done&&i>M.objIdx)return;const fl=!o.done&&o.failed&&o.failed();if(fl){html.push(`<div class="o done" style="color:var(--bad)">${o.text} — kaçırıldı</div>`);return;}const cls=o.done?'done':(!curSet?(curSet=true,'cur'):'');html.push(`<div class="o ${cls}">${o.text}${o.prog?` <span style="color:var(--muted);font-family:var(--mono);font-size:13px">${o.prog()}</span>`:''}</div>`);});$('objectives').innerHTML=html.join('');}
 let objRefresh=0;
 function updateMission(dt){if(!M||M.done)return;G.stats.time+=dt;if(M.update)M.update(dt);
- let changed=false;for(let i=0;i<M.obj.length;i++){const o=M.obj[i];if(o.done)continue;if(o.seq&&i>firstOpen())continue;if(o.check()){o.done=true;changed=true;feed('Görev: '+o.text.replace(/<[^>]+>/g,''),'#62d68f');tone(660,.12,.1);tone(990,.18,.1,'sine',1,.12);if(o.onDone)o.onDone();}}
+ let changed=false;for(let i=0;i<M.obj.length;i++){const o=M.obj[i];if(o.done)continue;if(o.seq&&i>firstOpen())continue;if(i===M.obj.length-1&&M.obj.some((q,j)=>j<i&&!q.done&&!q.optional))continue;if(o.check()){o.done=true;changed=true;feed('Görev: '+o.text.replace(/<[^>]+>/g,''),'#62d68f');tone(660,.12,.1);tone(990,.18,.1,'sine',1,.12);if(o.onDone)o.onDone();}}
  objRefresh-=dt;if(changed||objRefresh<=0){objRefresh=.5;renderObjectives();}
  // hostage death fail
  if(W.hostages.some(h=>h.dead))missionFail('REHİNE KAYBEDİLDİ','Rehinenin hayatını kaybetmesi görevin başarısız olması demek. Hedefini teşhis etmeden ateş etme.');
@@ -1270,7 +1270,7 @@ function updateExtract(dt){const E=W.extract;if(!E)return;E.t+=dt;const k=clamp(
  if(k>.6){G.shake=Math.max(G.shake,.05);if(Math.random()<.5){const a=Math.random()*6.28;burst(V3(E.to.x+Math.cos(a)*rand(3,9),E.to.y+.2,E.to.z+Math.sin(a)*rand(3,9)),1,'dust');}}loopVol('rotor',clamp(1-p.distanceTo(P.pos)/250,0,1));}
 
 // ================= MISSIONS =================
-function objMarkerPos(){const o=curObjective();return o&&o.pos?(typeof o.pos==='function'?o.pos():o.pos):null;}
+function objMarkerPos(){const opt=M&&M.obj.find(o=>o.optional&&!o.done&&o.pos&&typeof o.pos==='function'&&o.pos());if(opt)return opt.pos();const o=curObjective();return o&&o.pos?(typeof o.pos==='function'?o.pos():o.pos):null;}
 function allDead(list){return list.every(e=>e.dead||e.surr);}
 function nearP(p,r){return Math.hypot(P.pos.x-p.x,P.pos.z-p.z)<r;}
 function zoneMarker(x,z,r=2,col=0xd8b55b){const y=terrainH(x,z);const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,40,24,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));m.position.set(x,y+20,z);W.group.add(m);
@@ -1517,7 +1517,7 @@ function buildVillage(){
  return{spawn:V3(0,0,150),firstLook:V3(0,0,0),lz:V3(0,0,150),approach:V3(0,0,1),extraction:drop,road:[V3(0,0,215),V3(0,0,170),V3(1,0,154)],
   intro(){radio('Merkez','Kartal Timi, köyde bomba yapımcısı olduğu değerlendirilen şahıs saklanıyor. Kırmızı başlıklı hedefi mümkünse canlı yakalayın. Köyde siviller var!',7);setTimeout(()=>radio('Kartal-1','Anlaşıldı. Şok bombası ve V ile "Teslim ol" çağrısı yapacağım.',5),7000);},
   obj:[{text:'Bomba ustasını etkisiz hale getir (kırmızı başlık)',check:()=>hvt.dead||hvt.surr,pos:()=>hvt.dead||hvt.surr?null:hvt.pos},
-   {text:'Bomba ustasını canlı yakala (kelepçele)',optional:1,check:()=>hvt.cuffed},
+   {text:'Bomba ustasını canlı yakala (kelepçele)',optional:1,check:()=>hvt.cuffed,failed:()=>hvt.dead&&!hvt.cuffed,pos:()=>hvt.surr&&!hvt.cuffed?hvt.pos:null},
    {text:'Köydeki militanları temizle',prog:PROG(W.enemies),check:()=>allDead(W.enemies),pos:()=>{const e=W.enemies.find(e=>!e.dead&&!e.surr&&e.spotted);return e?e.pos:V3(0,0,-5);}},
    {text:'Dijital materyali topla',check:()=>ev.done,pos:ev.pos},
    {text:'Araca dön',check:()=>{exZ.vis=true;return nearP(drop,5);},pos:drop}],update(){}};}
