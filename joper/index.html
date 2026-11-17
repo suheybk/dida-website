@@ -215,6 +215,7 @@ body.cine #skip{display:block}
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <div class="panel wdetail" id="wDetail"></div>
         <div class="panel" id="vehPanel"><div class="eyebrow">İntikal Aracı</div><div class="vlist" id="vList" style="margin-top:8px"></div><p class="note" id="vDesc" style="margin:10px 0 0"></p></div>
+        <div class="panel" id="todPanel"><div class="eyebrow">Saat</div><div class="row" style="margin-top:8px" id="todRow"></div></div>
         <div class="panel"><div class="eyebrow">Zorluk</div><div class="row" style="margin-top:8px" id="diffRow"></div></div>
       </div>
     </div>
@@ -485,7 +486,7 @@ function flatGround(size,color){TER.flat=true;TER.size=size;const g=new THREE.Me
 function clearWorld(){
  if(W.group){scene.remove(W.group);W.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!Array.isArray(o.material)&&o.material.map&&o.material.map.isTexture&&!Object.values(TEX).includes(o.material.map)){o.material.map.dispose();o.material.dispose();}});}
  W.group=new THREE.Group();scene.add(W.group);
- Object.assign(W,{lead:null,colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
+ Object.assign(W,{lead:null,envNight:false,dayHemi:.75,sunDisk:null,defuse:null,colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
  loopStopAll();
 }
 function addCollider(minx,miny,minz,maxx,maxy,maxz,kind='wall',ref=null){const c={box:new THREE.Box3(V3(minx,miny,minz),V3(maxx,maxy,maxz)),active:true,kind,ref};W.colliders.push(c);return c;}
@@ -509,6 +510,16 @@ function setupLights(night){
  W.group.add(sun);W.group.add(sun.target);W.sun=sun;W.sunOff=night?V3(-60,120,-90):V3(80,140,40);
  const mf=new THREE.PointLight(0xffc070,0,14,2);W.group.add(mf);W.muzzleLight=mf;const bl=new THREE.PointLight(0xffd9a0,0,30,2);W.group.add(bl);W.boomLight=bl;const fl=new THREE.SpotLight(0xfff2dc,0,55,.38,.65,1.4);W.group.add(fl);W.group.add(fl.target);W.torch=fl;
 }
+const TOD={
+ sabah:{n:'Sabah',h:'06:30',fog:0xd6c6b2,top:0x7ea2cf,hor:0xf2cfa6,sun:0xffcf98,si:.85,sp:[150,42,30],hs:0xc8d2e2,hg:0x5a4a32,hi:.62},
+ ogle:{n:'Öğle',h:'12:30',fog:0xb8c4c8,top:0x5e8ccc,hor:0xd0d6d6,sun:0xfff0d8,si:1.05,sp:[80,140,40],hs:0xbcd4ec,hg:0x5a4a32,hi:.75},
+ aksam:{n:'Akşam',h:'18:50',fog:0xb4876a,top:0x2c3c66,hor:0xee8a50,sun:0xff9050,si:.8,sp:[-150,32,-40],hs:0x8f90b4,hg:0x4a3628,hi:.46},
+ gece:{n:'Gece',h:'03:10',night:1,fog:0x0b0f18,top:0x05070e,hor:0x141b29},
+};
+function setupEnv(key,near=80,far=520){const t=TOD[key]||TOD.ogle;const night=!!t.night;setupSky(night,t.fog,night?25:near,night?170:far,t.top,t.hor);setupLights(night);W.envNight=night;W.tod=key;
+ if(!night){W.sun.color.setHex(t.sun);W.sun.intensity=t.si;W.sunOff=V3(...t.sp);W.hemi.color.setHex(t.hs);W.hemi.groundColor.setHex(t.hg);W.hemi.intensity=t.hi;W.dayHemi=t.hi;
+  if(key!=='ogle'){const d=V3(...t.sp).normalize();const sd=new THREE.Mesh(new THREE.SphereGeometry(28,16,10),new THREE.MeshBasicMaterial({color:key==='aksam'?0xffb070:0xffe0b0,fog:false}));sd.position.copy(d.multiplyScalar(820));W.group.add(sd);W.sunDisk=sd;}}
+ return night;}
 function lampLight(x,y,z,col=0xffb060,int=1.1,dist=16){const l=new THREE.PointLight(col,int,dist,2);l.position.set(x,y,z);W.group.add(l);const b=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),new THREE.MeshBasicMaterial({color:col}));b.position.set(x,y,z);W.group.add(b);W.lights.push(l);return l;}
 
 // --- props ---
@@ -631,7 +642,7 @@ function spawnEnemy(x,z,o={}){
  h.root.position.set(x,y,z);W.group.add(h.root);
  const e={kind:'enemy',m:h,pos:V3(x,y,z),yaw:o.yaw??rand(-3,3),hp:100,hipY:.9,state:'idle',group:o.group||null,crouch:!!o.crouch,patrol:o.patrol||null,pIdx:0,
   gun:o.gun||'ak',sniper:o.gun==='svd',seeT:0,react:0,lastSeen:null,lostT:0,target:null,burst:0,shotCD:rand(0,1),percT:rand(0,.3),stun:0,dead:false,deadT:0,walk:0,strafeT:rand(1,3),strafeDir:0,
-  home:V3(x,y,z),leash:o.leash??18,stagger:0,surr:false,cuffed:false,static:!!o.static,lastHeard:0,elev:o.y!=null};
+  home:V3(x,y,z),leash:o.leash??18,stagger:0,surrChance:o.surr??.4,hvt:!!o.hvt,surr:false,cuffed:false,static:!!o.static,lastHeard:0,elev:o.y!=null};
  if(e.gun==='pkm'){e.rate=.09;e.dmg=17;e.burstN=[5,9];}else if(e.sniper){e.rate=1.6;e.dmg=45;e.burstN=[1,1];}else{e.rate=.11;e.dmg=15;e.burstN=[3,5];}
  h.root.rotation.y=e.yaw;if(e.crouch)setCrouch(e,true);
  W.enemies.push(e);W.hittables.push(e);return e;}
@@ -779,7 +790,7 @@ addEventListener('keydown',e=>{
   if(e.code==='Escape'&&G.fallbackLook)pauseGame();
   if(e.code==='Digit1')selectSlot(1);if(e.code==='Digit2')selectSlot(2);if(e.code==='Digit3')selectSlot(3);if(e.code==='Digit4')selectSlot(4);
   if(e.code==='KeyR')startReload();if(e.code==='KeyE')interact();if(e.code==='KeyG')throwNade('flash');if(e.code==='KeyT')throwNade('smoke');
-  if(e.code==='KeyB')placeCharge();if(e.code==='KeyH')useMed();if(e.code==='KeyN')toggleNVG();if(e.code==='KeyL'){P.light=!P.light;sndClick();if(VM.lens)VM.lens.material.color.setHex(P.light?0xfff6d0:0x333333);}if(e.code==='KeyF')teamOrder();
+  if(e.code==='KeyB')placeCharge();if(e.code==='KeyH')useMed();if(e.code==='KeyN')toggleNVG();if(e.code==='KeyV')shoutSurrender();if(e.code==='KeyL'){P.light=!P.light;sndClick();if(VM.lens)VM.lens.material.color.setHex(P.light?0xfff6d0:0x333333);}if(e.code==='KeyF')teamOrder();
   if(e.code==='KeyX')toggleMode();if(e.code==='KeyC'&&!e.repeat)P.crouch=!P.crouch;if(e.code==='Space'&&P.onGround&&!P.crouch){P.vel.y=4.6;P.onGround=false;}
  }
 });
@@ -902,7 +913,7 @@ function detonate(g){const p=g.pos;const dist=p.distanceTo(P.pos);
  if(g.kind==='flash'){sndExplosion(dist,true);burst(p,10,'spark');W.boomLight.position.copy(p).y+=.5;W.boomLight.intensity=14;
   const pp=p.clone();pp.y+=.4;
   for(const e of W.enemies){if(e.dead)continue;const d=e.pos.distanceTo(p);const head=V3(e.pos.x,e.pos.y+e.hipY+.7,e.pos.z);if(d<13&&los(pp,head,false)){e.stun=Math.max(e.stun,5-d*.25);e.state='combat';
-    if(!e.surr&&Math.random()<.4&&e.hp>0){e.surr=true;setCrouch(e,true);e.m.gun.visible=false;e.m.armL.rotation.set(-2.9,0,.2);e.m.armR.rotation.set(-2.9,0,-.2);feed('Şüpheli teslim oluyor — kelepçele!');}}}
+    if(!e.surr&&Math.random()<e.surrChance&&e.hp>0){e.surr=true;setCrouch(e,true);e.m.gun.visible=false;e.m.armL.rotation.set(-2.9,0,.2);e.m.armR.rotation.set(-2.9,0,-.2);feed('Şüpheli teslim oluyor — kelepçele!');}}}
   const eye=camera.getWorldPosition(V3());if(dist<15&&los(pp,eye,false)){const toG=V3().subVectors(p,eye).normalize();const facing=toG.dot(camFwd());const s=clamp((1-dist/15)*(facing>0?1:.35),0,1)*3.5;if(s>.2){P.flashT=Math.max(P.flashT,s);sndRing(s);}}
   G.flashEvents=(G.flashEvents||0)+1;W.lastFlash=p.clone();noiseEvent(p,60);}
  else{W.smokes.push({pos:V3(p.x,p.y+1.2,p.z),t:0,r:0,emit:0});noiseHit(2500,1.5,.2,'highpass');}
@@ -931,10 +942,14 @@ function ramHit(){
  if(d.hp<=0||!d.locked){openDoor(d,true,P.pos);radio('Kartal-1',pick(['Kapı açıldı! Gir gir gir!','Giriş! Giriş!','Kapı düştü, ilerle!']),2.5);G.stats.rams++;if(d.id)G['ram_'+d.id]=true;
   for(const e of W.enemies){if(!e.dead&&e.pos.distanceTo(d.pos)<6){e.stun=Math.max(e.stun,1.2);alertEnemy(e,P.pos,false);}}}
  else{noiseEvent(d.pos,45);}}
+function shoutSurrender(){if(G.time-(G.lastShout||-9)<3)return;G.lastShout=G.time;radio('Kartal-1',pick(['Jandarma! Silahını bırak, yere yat!','Kıpırdama! Jandarma! Teslim ol!','Ellerini kaldır! Teslim ol!']),2.5);
+ const eye=V3(P.pos.x,P.pos.y+eyeH(),P.pos.z);let n=0;for(const e of W.enemies){if(e.dead||e.surr)continue;const d=e.pos.distanceTo(P.pos);if(d>20)continue;if(!los(eye,V3(e.pos.x,e.pos.y+e.hipY+.6,e.pos.z),false))continue;
+  let ch=e.surrChance*(e.state==='idle'?.7:.3)*(e.hp<60?1.6:1)*(e.stun>0?2:1)*(P.light&&W.night?1.3:1);if(Math.random()<ch){e.surr=true;setCrouch(e,true);e.m.gun.visible=false;e.m.armL.rotation.set(-2.9,0,.2);e.m.armR.rotation.set(-2.9,0,-.2);n++;}else alertEnemy(e,P.pos,true);}
+ if(n)feed(n+' şüpheli teslim oldu — kelepçele [E]','#62d68f');}
 function useMed(){if(P.med<=0||P.hp>=100||P.healT>0)return;P.med--;P.healT=3;radio('Kartal-1','Turnikeyi sarıyorum…',2);}
 function toggleNVG(){P.nvg=!P.nvg;applyNVG();tone(P.nvg?900:600,.15,.08,'sine',P.nvg?2:.5);}
 function applyNVG(){canvas.style.filter=P.nvg?'grayscale(1) sepia(1) hue-rotate(55deg) saturate(4) brightness(1.5) contrast(1.15)':'';$('nvgOver').style.display=P.nvg?'block':'none';
- if(W.hemi){W.hemi.intensity=W.night?(P.nvg?1.2:.4):.75;}if(W.sun&&W.night)W.sun.intensity=P.nvg?.9:.32;if(scene.fog&&W.night){scene.fog.far=P.nvg?260:W.fogFar;}}
+ if(W.hemi){W.hemi.intensity=W.night?(P.nvg?1.2:.4):(W.dayHemi||.75);}if(W.sun&&W.night)W.sun.intensity=P.nvg?.9:.32;if(scene.fog&&W.night){scene.fog.far=P.nvg?260:W.fogFar;}}
 let teamHold=false;function teamOrder(){teamHold=!teamHold;W.allies.forEach(a=>{a.holdPos=a.pos.clone();});radio('Kartal-1',teamHold?'Tim, pozisyonu tut!':'Tim, beni takip et!',2.5);setTimeout(()=>radio('Kartal-2',teamHold?'Anlaşıldı, pozisyondayız.':'Anlaşıldı, arkandayız.',2.5),600);}
 
 function noiseEvent(pos,radius){for(const e of W.enemies){if(e.dead||e.surr)continue;if(e.pos.distanceTo(pos)<radius)alertEnemy(e,pos,false);}}
@@ -990,7 +1005,7 @@ function updatePlayer(dt){
  // flashlight
  if(W.torch){const f=camFwd();W.torch.intensity=P.light?(W.night?2.2:1.2):0;W.torch.position.set(camera.position.x+Math.cos(P.yaw)*.15,camera.position.y-.15,camera.position.z-Math.sin(P.yaw)*.15);W.torch.target.position.copy(camera.position).addScaledVector(f,12);}
  // sun follows
- if(W.sun){W.sun.position.copy(P.pos).add(W.sunOff);W.sun.target.position.copy(P.pos);}
+ if(W.sun){W.sun.position.copy(P.pos).add(W.sunOff);W.sun.target.position.copy(P.pos);}if(W.sunDisk){W.sunDisk.position.copy(W.sunOff).normalize().multiplyScalar(820).add(camera.position);}if(W.stars)W.stars.position.copy(camera.position);
 }
 
 // ================= AI =================
@@ -1106,7 +1121,7 @@ function startMission(id){
  Object.assign(P,{light:false,hp:100,ar:100,dead:false,crouch:false,crouchT:0,aimT:0,flash:3,smoke:2,charge:def.id==='egitim'?3:2,med:2,nvg:false,recoilP:0,recoilY:0,kick:0,swing:0,healT:0,flashT:0,vel:V3(),burstLeft:0});
  P.weapons=[newWeapon(WEAPONS[G.sel.primary]),newWeapon(WEAPONS[G.sel.secondary])];P.slot=1;
  M=def.build();M.def=def;M.objIdx=0;M.done=false;M.endT=0;
- W.night=!!M.night;W.fogFar=M.fogFar||scene.fog.far;applyNVG();
+ W.night=!!(M.night||W.envNight);W.fogFar=M.fogFar||scene.fog.far;applyNVG();
  P.pos.copy(M.spawn);P.yaw=M.spawnYaw||0;P.pitch=0;seedCrumbs();
  // team
  const roles=[['Kartal-2','shield'],['Kartal-3','rifle'],['Kartal-4','mg'],['Kartal-5','medic']];
@@ -1324,7 +1339,7 @@ function buildTraining(){
 
 // ---------- MOUNTAIN ----------
 function buildMountain(){
- setupSky(false,0xb8c4c8,80,520,0x5e8ccc,0xd0d6d6);setupLights(false);
+ setupEnv(G.sel.tod||'ogle',80,520);
  const flats=[];const raw=(x,z)=>{let h=fbm(x*.0055+7.3,z*.0055+1.9,5)*120-38;const r=1-Math.abs(fbm(x*.012+3,z*.012+9,3)*2-1);h+=r*r*18;h+=Math.max(0,-z-60)*.12;return h;};
  const addFlat=(x,z,r,f=10,dh=0)=>flats.push({x,z,r,f,h:raw(x,z)+dh});
  addFlat(0,150,16,14);addFlat(-60,60,9,8,1);addFlat(70,25,9,8,1);addFlat(-15,-55,9,10,2);addFlat(40,-125,15,10,-1);addFlat(-90,-150,14,12);addFlat(0,-5,8,8);
@@ -1376,7 +1391,7 @@ function buildMountain(){
 
 // ---------- NIGHT RAID ----------
 function buildRaid(){
- setupSky(true,0x0b0f18,25,170,0x05070e,0x141b29);setupLights(true);
+ setupEnv(G.sel.tod||'gece',60,330);
  const H=(x,z)=>{let h=fbm(x*.01+2,z*.01+5,4)*26-10;const d=Math.hypot(x,z);h=lerp(h,0,smooth(42,28,d));const rd=Math.abs(x-Math.sin(z*.02)*6);if(z>15)h=lerp(h,Math.min(h,0)+.0,smooth(7,3,rd)*.0);return h;};
  const H2=(x,z)=>{let h=H(x,z);const rd=Math.abs(x);if(z>20)h=lerp(h,0,smooth(10,4,rd));return h;};
  buildTerrain(420,140,H2,(x,y,z,ny,c)=>{const n=vnoise(x*.2,z*.2)*.06;if(Math.abs(x)<3.5&&z>18)c.setRGB(.34+n,.31+n,.26+n);else c.setRGB(.26+n,.3+n,.18+n);});
@@ -1403,7 +1418,7 @@ function buildRaid(){
  const hostage=spawnHostage(-1,-11,0);
  // drop point
  const drop=V3(0,0,62);ammoCrate(4,66);const exZ=zoneMarker(drop.x,drop.z,3.5);exZ.vis=false;
- return{night:true,fogFar:170,spawn:V3(0,0,62),firstLook:V3(0,0,0),lz:drop,approach:V3(0,0,1),extraction:drop,
+ return{spawn:V3(0,0,62),firstLook:V3(0,0,0),lz:drop,approach:V3(0,0,1),extraction:drop,
   road:[V3(0,0,200),V3(-4,0,150),V3(2,0,100),V3(0,0,66)],
   intro(){radio('Merkez','Kartal Timi, hedef ev 40 metre kuzeyinizde. Bir rehine olduğu değerlendiriliyor. Teşhis etmeden ateş etmeyin.',6);setTimeout(()=>radio('Kartal-1','Anlaşıldı. N ile gece görüşü. Kapıyı kırıp şok bombasıyla gireceğiz.',5),6000);},
   obj:[
@@ -1413,10 +1428,207 @@ function buildRaid(){
    {text:'Rehineyle birlikte araca dön',check:()=>{exZ.vis=hostage.freed;return hostage.freed&&nearP(drop,5)&&hostage.pos.distanceTo(drop)<9;},pos:drop},
   ],update(dt){}};
 }
+// ================= SHARED MISSION HELPERS =================
+const PROG=a=>()=>`${a.filter(e=>e.dead||e.surr).length}/${a.length}`;
+function hillsTerrain(o){
+ const flats=[];const raw=(x,z)=>{let h=fbm(x*o.freq+o.sx,z*o.freq+o.sz,5)*o.amp+o.base;if(o.ridge){const r=1-Math.abs(fbm(x*o.freq*2.2+3,z*o.freq*2.2+9,3)*2-1);h+=r*r*o.ridge;}return h;};
+ (o.flats||[]).forEach(([x,z,r,f,dh])=>flats.push({x,z,r,f:f??10,h:raw(x,z)+(dh||0)}));
+ (o.roads||[]).forEach(pts=>{for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let t=0;t<=L;t+=5){const x=lerp(a[0],b[0],t/L),z=lerp(a[1],b[1],t/L);flats.push({x,z,r:3,f:5,h:raw(x,z)*.85,road:1});}}});
+ const H=(x,z)=>{let h=raw(x,z);for(const f of flats){const d=Math.abs(x-f.x)+Math.abs(z-f.z);if(d>(f.r+f.f)*1.5)continue;const dd=Math.hypot(x-f.x,z-f.z);if(dd<f.r+f.f){h=lerp(h,f.h,smooth(f.r+f.f,f.r,dd));}}return h;};
+ const st=o.style||'dag';
+ buildTerrain(o.size||520,o.seg||170,H,(x,y,z,ny,c)=>{const n=vnoise(x*.15,z*.15)*.08;
+  if(st==='kurak'){if(ny<.8)c.setRGB(.5+n,.43+n,.34+n);else c.setRGB(.6+n,.52+n,.38+n*.6);}
+  else if(st==='koy'){if(ny<.8)c.setRGB(.45+n,.4+n,.32+n);else c.setRGB(.36+n,.46+n,.24+n*.5);}
+  else{if(ny<.78)c.setRGB(.42+n,.38+n,.33+n);else if(y>(o.snowY||90)+n*60)c.setRGB(.78,.78,.76);else c.setRGB(.34+n,.42+n,.25+n*.5);}});
+ return H;}
+function scatter(nT,nR,avoid,opt={}){const S=(TER.size/2)-20;const ok=(x,z)=>!avoid.some(([ax,az,r])=>Math.hypot(x-ax,z-az)<r);
+ for(let i=0;i<nT;i++){const x=rand(-S,S),z=rand(-S,S);if(!ok(x,z))continue;if(Math.random()<(opt.bush??.5))bush(x,z,rand(.8,1.6));else tree(x,z,rand(.7,1.3),Math.random()<(opt.pine??.2));}
+ for(let i=0;i<nR;i++){const x=rand(-S,S),z=rand(-S,S);if(!ok(x,z))continue;rock(x,z,rand(.4,2.2),pick(opt.rockCols||[0x7a746a,0x6d675e,0x857e72]));}}
+function mevziAt(x,z,arr,n,guns,look,opt={}){const y=terrainH(x,z);for(let i=0;i<5;i++){const a=i/5*Math.PI*2+.3;sandbags(x+Math.cos(a)*4.5,z+Math.sin(a)*4.5,2.6,-a+Math.PI/2,1.0);}
+ for(let i=0;i<3;i++)rock(x+rand(-8,8),z+rand(-8,8),rand(.8,1.6));const tarp=box(3,.05,3,0x4a4a32);tarp.position.set(x,y+2.2,z-2);W.group.add(tarp);[[-1.4,-.6],[1.4,-.6],[-1.4,-3.4],[1.4,-3.4]].forEach(([dx,dz])=>{const p=box(.08,2.2,.08,0x4a3826);p.position.set(x+dx,y+1.1,z+dz);W.group.add(p);});
+ crate(x+1.5,z-2.5,0x4f5b3a);for(let i=0;i<n;i++){const a=i/n*Math.PI*2;arr.push(spawnEnemy(x+Math.cos(a)*2.2,z+Math.sin(a)*2.2,Object.assign({group:arr,gun:guns?guns[i]:null,crouch:Math.random()<.5,yaw:Math.atan2(look.x-x,look.z-z)+rand(-.6,.6),leash:10},opt)));}}
+function rockShell(x,z,w,d,y){for(let i=0;i<26;i++){const a=rand(Math.PI*1.02,Math.PI*1.98);const rr=Math.max(w,d)*.62;rock(x+Math.cos(a)*rr*1.15,z+Math.sin(a)*rr*.95-1,rand(1.8,3.4),0x6d675e);}
+ for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(rand(2.2,3.8),0),lam(0x6d675e));m.position.set(x+rand(-w/2,w/2),y+3.6+rand(0,1),z+rand(-d/2,d/2-1));m.scale.y=.5;m.castShadow=true;W.group.add(m);}}
+function houseProps(x,z,y){crate(x,z,0x6b4a2e,1,y);}
+function bigBoom(p,r=14){W.boomLight.position.copy(p);W.boomLight.intensity=18;sndExplosion(p.distanceTo(P.pos));for(let i=0;i<4;i++)setTimeout(()=>{burst(V3(p.x+rand(-3,3),p.y+rand(0,3),p.z+rand(-3,3)),16,'fire');burst(p,14,'smoke');},i*160);G.shake=Math.max(G.shake,clamp(1.2-p.distanceTo(P.pos)/80,.1,1));
+ for(const e of W.enemies){if(!e.dead&&e.pos.distanceTo(p)<r){killActor(e);}}const pd=p.distanceTo(P.pos);if(pd<r)hurtPlayer(160*(1-pd/r),p);}
+function bombDevice(x,z,y,secs){const g=new THREE.Group();const b=box(.7,.45,.5,0x3a3a2a);b.position.y=.22;g.add(b);for(let i=0;i<4;i++){const c=cyl(.07,.07,.4,0x8a6a3a,8);c.position.set(-.24+i*.16,.65,0);g.add(c);}
+ const tm=box(.28,.14,.04,0x101010);tm.position.set(0,.4,.27);g.add(tm);const led=new THREE.Mesh(new THREE.SphereGeometry(.03,6,4),new THREE.MeshBasicMaterial({color:0xff2020}));led.position.set(.18,.52,.25);g.add(led);
+ g.position.set(x,y,z);W.group.add(g);const bomb={pos:V3(x,y,z),led,left:secs,defused:false,t:0,g};
+ W.interact.push({pos:bomb.pos,label:'[E] Fünyeyi sökmeye başla (yanında kal)',range:2.2,act:(it)=>{if(bomb.defused)return;W.defuse=bomb;radio('Kartal-1','Fünyeyi söküyorum, beni koruyun!',3);}});return bomb;}
+function updateBomb(bomb,dt){if(bomb.defused)return;bomb.left-=dt;bomb.led.visible=(G.time*(bomb.left<30?6:2))%1<.5;
+ if(W.defuse===bomb){if(nearP(bomb.pos,2.6)&&!P.dead){bomb.t+=dt;centerMsg('FÜNYE SÖKÜLÜYOR',Math.min(100,Math.round(bomb.t/6*100))+'%',.3);if(bomb.t>=6){bomb.defused=true;W.defuse=null;bomb.led.visible=false;radio('Kartal-1','Fünye söküldü! Patlayıcı etkisiz!',4);}}else{W.defuse=null;bomb.t=0;feed('Fünye sökme yarıda kaldı');}}
+ if(bomb.left<=0&&!bomb.defused){bigBoom(bomb.pos,30);missionFail('PATLAYICI İNFİLAK ETTİ','Süre doldu. Bir dahaki sefere atölyeye daha hızlı gir, fünyeyi zamanında sök.');}}
+const FMT=t=>{t=Math.max(0,Math.ceil(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
+TEX.facade=canvasTex(128,256,(x,w,h)=>{x.fillStyle='#b9b2a4';x.fillRect(0,0,w,h);for(let r=0;r<6;r++)for(let c=0;c<3;c++){x.fillStyle=Math.random()<.25?'#e8c878':'#2a3038';x.fillRect(14+c*40,14+r*40,24,26);x.fillStyle='#8a8478';x.fillRect(12+c*40,40+r*40,28,3);}});
+function blockBuilding(x,z,w,d,h,col){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[new THREE.MeshPhongMaterial({map:TEX.facade,color:col}),new THREE.MeshPhongMaterial({map:TEX.facade,color:col}),lam(0x5a5650),lam(0x5a5650),new THREE.MeshPhongMaterial({map:TEX.facade,color:col}),new THREE.MeshPhongMaterial({map:TEX.facade,color:col})]);m.position.set(x,h/2,z);m.castShadow=m.receiveShadow=true;W.group.add(m);colliderFromMesh(m);return m;}
+function parkedCar(x,z,rot,col){const g=new THREE.Group();const b=box(1.8,.7,4.2,col);b.position.y=.55;g.add(b);const t=box(1.6,.55,2.2,col);t.position.set(0,1.15,-.2);g.add(t);const gl=box(1.62,.4,2.0,0x1d2a33);gl.position.set(0,1.18,-.2);g.add(gl);[[-.85,1.3],[.85,1.3],[-.85,-1.3],[.85,-1.3]].forEach(([wx,wz])=>{const wh=wheel(.33,.22);wh.position.set(wx,0,wz);g.add(wh);});g.position.set(x,0,z);g.rotation.y=rot;W.group.add(g);W.colliders.push({box:new THREE.Box3().setFromObject(g),active:true,kind:'veh'});}
+function mule(x,z,rot){const g=new THREE.Group();const b=box(.5,.6,1.3,0x5a4632);b.position.y=1.0;g.add(b);const n=box(.25,.5,.3,0x5a4632);n.position.set(0,1.35,.75);n.rotation.x=-.5;g.add(n);const hd=box(.22,.22,.45,0x4a3826);hd.position.set(0,1.55,.95);g.add(hd);[[-.18,.5],[.18,.5],[-.18,-.5],[.18,-.5]].forEach(([lx,lz])=>{const l=box(.1,.75,.1,0x4a3826);l.position.set(lx,.38,lz);g.add(l);});[-1,1].forEach(s=>{const c=box(.3,.35,.6,0x6b5a3a);c.position.set(s*.4,1.0,0);g.add(c);});g.position.set(x,terrainH(x,z),z);g.rotation.y=rot;W.group.add(g);addCollider(x-.6,terrainH(x,z),z-.7,x+.6,terrainH(x,z)+1.4,z+.7,'veh');}
+function campfire(x,z){const y=terrainH(x,z);for(let i=0;i<6;i++){const s=box(.5,.08,.1,0x3a2a1a);s.position.set(x,y+.05,z);s.rotation.y=i;W.group.add(s);}const f=new THREE.Mesh(new THREE.ConeGeometry(.3,.6,6),new THREE.MeshBasicMaterial({color:0xff9a30}));f.position.set(x,y+.35,z);W.group.add(f);lampLight(x,y+.8,z,0xff8a30,1.6,16);}
+
+// ---------- CUDİ MAĞARA ----------
+function buildCave(){
+ setupEnv(G.sel.tod||'sabah',80,520);
+ const cx=0,cz=-125;
+ hillsTerrain({style:'kurak',freq:.0055,sx:11.1,sz:4.4,amp:115,base:-30,ridge:16,flats:[[0,160,16,14],[-70,40,9,8,1],[65,-5,9,8,1],[cx,cz,17,10,-1],[-100,-160,14,12],[20,60,8,8]],roads:[[[-30,250],[-10,210],[0,168]]]});
+ scatter(160,200,[[0,160,20],[cx,cz,20]],{bush:.65,rockCols:[0x8a7c66,0x7a6e5c,0x9a8c74]});
+ const lz=V3(0,0,160);const nA=[],nB=[],pat=[],out=[],inn=[];
+ mevziAt(-70,40,nA,3,['svd','ak','pkm'],lz);mevziAt(65,-5,nB,3,['svd','ar','ak'],lz);
+ pat.push(spawnEnemy(20,60,{patrol:[V3(20,0,60),V3(-10,0,80),V3(-20,0,30),V3(25,0,25)]}),spawnEnemy(18,62,{patrol:[V3(18,0,62),V3(-8,0,82),V3(-18,0,32),V3(27,0,27)]}),spawnEnemy(-10,-20,{patrol:[V3(-10,0,-20),V3(30,0,-40),V3(10,0,-70)]}));
+ const by=terrainH(cx,cz);
+ const bk=building({x:cx,z:cz,w:18,d:14,h:3,y:by,col:0x7d7468,inCol:0x8d8478,roofCol:0x6d665c,floor:0x5a5248,doors:[{side:'s',at:9,locked:true,steel:true,id:'cave'}],
+  inner:[{x1:-9,z1:0,x2:9,z2:0,door:{at:4.5}},{x1:0,z1:-7,x2:0,z2:0,door:{at:3.5,locked:true,id:'depo'}},{x1:3,z1:0,x2:3,z2:7,door:{at:3.5}}]});
+ rockShell(cx,cz,18,14,by);sandbags(cx-4,cz+9.5,3,0,1);sandbags(cx+4,cz+9.5,3,0,1);
+ lampLight(cx-5,by+2.6,cz+3,0xffc070,.9,10);lampLight(cx+5,by+2.6,cz-3,0xffc070,.9,10);lampLight(cx-5,by+2.6,cz-4,0xffc070,.8,9);
+ out.push(spawnEnemy(cx-3,cz+11,{yaw:0,leash:12}),spawnEnemy(cx+3,cz+12,{gun:'pkm',yaw:0,crouch:true,leash:12}));
+ inn.push(spawnEnemy(cx-6,cz+3,{static:true,yaw:0}),spawnEnemy(cx-2,cz+4.5,{static:true,yaw:.3}),spawnEnemy(cx+6,cz+4,{static:true,yaw:-1.2}),spawnEnemy(cx-6,cz-4,{static:true,yaw:0}),spawnEnemy(cx+5,cz-5,{static:true,yaw:-1.6,crouch:true}),spawnEnemy(cx+2,cz-2,{static:true,yaw:Math.PI}));
+ for(let i=0;i<6;i++)crate(cx+3+(i%3)*1.1,cz-5.5+Math.floor(i/3)*.8,0x4f5b3a,1,by);
+ const depot=V3(cx+5,by,cz-3.5);let placed=false,destroyed=false;
+ W.interact.push({pos:depot,label:'[E] Depoya imha patlayıcısı yerleştir',range:2.6,act(it){it.done=true;placed=true;radio('Kartal-1','İmha şarjı kuruldu! Herkes mağaradan çıksın, 40 metre uzaklaşın!',5);}});
+ ammoCrate(5,156);const ex=V3(-100,0,-160);const exZ=zoneMarker(ex.x,ex.z,4);exZ.vis=false;
+ return{spawn:V3(0,0,160),firstLook:V3(0,0,60),lz,approach:V3(-.2,0,1).normalize(),extraction:ex,road:[V3(-30,0,250),V3(-10,0,210),V3(0,0,166)],
+  intro(){radio('Merkez','Kartal Timi, Cudi eteklerindeki mağarada silah deposu tespit edildi. Vadiyi gözleyen iki keskin nişancı mevzisi var.',6);setTimeout(()=>radio('Kartal-1','Anlaşıldı. Önce nişancıları susturuyoruz. Siperden sipere ilerle!',5),6000);},
+  obj:[{text:'Batı nişancı mevzisini sustur',prog:PROG(nA),check:()=>allDead(nA),pos:V3(-70,0,40)},{text:'Doğu nişancı mevzisini sustur',prog:PROG(nB),check:()=>allDead(nB),pos:V3(65,0,-5)},
+   {text:'Mağaranın çelik kapısını kır',check:()=>bk.doors[0].open,pos:V3(cx,0,cz+9)},{text:'Mağaradaki militanları etkisiz hale getir',prog:PROG(inn.concat(out)),check:()=>allDead(inn)&&allDead(out),pos:V3(cx,0,cz)},
+   {text:'Silah deposuna imha patlayıcısı yerleştir',check:()=>placed,pos:depot},
+   {text:'Mağaradan 40 m uzaklaş — depo imha edilecek',check:()=>{if(placed&&!destroyed&&Math.hypot(P.pos.x-depot.x,P.pos.z-depot.z)>40){destroyed=true;bigBoom(V3(depot.x,depot.y+1,depot.z),16);radio('Merkez','Patlama görüldü, depo imha edildi. Tebrikler!',4);}return destroyed;},pos:V3(cx,0,cz+45)},
+   {text:'Tahliye noktasına ulaş',check:()=>{exZ.vis=destroyed;return destroyed&&nearP(ex,5);},pos:ex}],update(){}};}
+
+// ---------- KÖY EVİ ----------
+function buildVillage(){
+ setupEnv(G.sel.tod||'sabah',70,420);
+ hillsTerrain({style:'koy',size:420,seg:140,freq:.009,sx:3.3,sz:8.8,amp:30,base:-10,flats:[[0,0,48,18],[0,150,12,10]],roads:[[[0,200],[0,150],[3,90],[0,40],[0,0]]]});
+ scatter(170,60,[[0,0,55],[0,150,14]],{bush:.4,pine:.1});
+ // fields fences
+ for(let i=0;i<14;i++){const p=box(.1,1,.1,0x5a4632);p.position.set(-40+i*6,terrainH(-40+i*6,52)+.5,52);W.group.add(p);}
+ const hs=[{x:-18,z:-10,w:10,d:8},{x:-4,z:-26,w:12,d:9},{x:16,z:-14,w:10,d:8},{x:20,z:12,w:9,d:8},{x:-20,z:16,w:10,d:8}];
+ const B=hs.map((h,i)=>building({x:h.x,z:h.z,w:h.w,d:h.d,h:2.9,col:pick([0xc9b896,0xb8a888,0xd2c4a4]),roofCol:0x8a4a32,doors:[{side:'s',at:h.w/2,locked:i<3,id:'h'+i}],inner:[{x1:-h.w/2,z1:0,x2:h.w/2-3.5,z2:0,door:{at:2.2}}]}));
+ hs.forEach(h=>{wallSeg(h.x-h.w/2-3,h.z+h.d/2+4,h.x-1,h.z+h.d/2+4,terrainH(h.x,h.z),1.4,.3,0x9b8b70);});
+ lampLight(-4,2.8,-21.4,0xffd090,.5,8);
+ const e1=[spawnEnemy(-20,-12,{static:true,yaw:0}),spawnEnemy(-16,-8,{static:true,yaw:.4}),spawnEnemy(-20,-7.5,{static:true,yaw:0,crouch:true})];
+ const e2=[spawnEnemy(-7,-29,{static:true,yaw:0}),spawnEnemy(-1,-29,{static:true,yaw:-.3}),spawnEnemy(-4,-23,{static:true,yaw:0,gun:'pkm'})];
+ const hvt=spawnEnemy(1,-28.5,{static:true,yaw:-.6,hvt:true,surr:.95,gun:'ar'});hvt.m.up.children.forEach(c=>{});
+ const hvtTag=new THREE.Mesh(new THREE.BoxGeometry(.26,.08,.27),lam(0x8a1a1a));hvtTag.position.y=.95;hvt.m.up.add(hvtTag);
+ const e3=[spawnEnemy(14,-16,{static:true,yaw:0}),spawnEnemy(18,-12,{static:true,yaw:.5})];
+ const yard=[spawnEnemy(5,5,{patrol:[V3(5,0,5),V3(-10,0,2),V3(-6,0,-16),V3(10,0,-4)]}),spawnEnemy(-8,30,{patrol:[V3(-8,0,30),V3(10,0,30),V3(8,0,22)]}),spawnEnemy(12,18,{static:true,yaw:Math.PI,crouch:true})];
+ spawnDummy(20,13,false,Math.PI);spawnDummy(-21,17,false,Math.PI);spawnDummy(-19,18,false,Math.PI*.8);
+ const ev={pos:V3(-8.5,terrainH(-4,-26),-28.6),label:'[E] Dijital materyali ve düzenek parçalarını topla',range:2.4,done:false,act(it){it.done=true;radio('Kartal-1','Bomba yapım malzemeleri ve harddiskler alındı.',3);}};W.interact.push(ev);addBox(-8.5,terrainH(-4,-26),-29.6,1.2,.8,.6,0x6b4a2e);
+ const drop=V3(0,0,150);ammoCrate(4,146);const exZ=zoneMarker(0,150,3.5);exZ.vis=false;
+ return{spawn:V3(0,0,150),firstLook:V3(0,0,0),lz:V3(0,0,150),approach:V3(0,0,1),extraction:drop,road:[V3(0,0,215),V3(0,0,170),V3(1,0,154)],
+  intro(){radio('Merkez','Kartal Timi, köyde bomba yapımcısı olduğu değerlendirilen şahıs saklanıyor. Kırmızı başlıklı hedefi mümkünse canlı yakalayın. Köyde siviller var!',7);setTimeout(()=>radio('Kartal-1','Anlaşıldı. Şok bombası ve V ile "Teslim ol" çağrısı yapacağım.',5),7000);},
+  obj:[{text:'Bomba ustasını etkisiz hale getir (kırmızı başlık)',check:()=>hvt.dead||hvt.surr,pos:()=>hvt.dead||hvt.surr?null:hvt.pos},
+   {text:'Bomba ustasını canlı yakala (kelepçele)',optional:1,check:()=>hvt.cuffed},
+   {text:'Köydeki militanları temizle',prog:PROG(W.enemies),check:()=>allDead(W.enemies),pos:()=>{const e=W.enemies.find(e=>!e.dead&&!e.surr&&e.spotted);return e?e.pos:V3(0,0,-5);}},
+   {text:'Dijital materyali topla',check:()=>ev.done,pos:ev.pos},
+   {text:'Araca dön',check:()=>{exZ.vis=true;return nearP(drop,5);},pos:drop}],update(){}};}
+
+// ---------- PATLAYICI ATÖLYESİ ----------
+function buildWorkshop(){
+ setupEnv(G.sel.tod||'aksam',60,380);flatGround(400,0x6f6a5c);
+ const asph=new THREE.Mesh(new THREE.PlaneGeometry(14,400),lam(0x34363a));asph.rotation.x=-Math.PI/2;asph.position.set(0,.02,0);asph.receiveShadow=true;W.group.add(asph);
+ const lot=new THREE.Mesh(new THREE.PlaneGeometry(70,60),lam(0x5a5a56));lot.rotation.x=-Math.PI/2;lot.position.set(30,.015,-30);lot.receiveShadow=true;W.group.add(lot);
+ // fence
+ wallSeg(-5,0,25,0,0,2.2,.25,0x7a7a74);wallSeg(31,0,65,0,0,2.2,.25,0x7a7a74);wallSeg(-5,-60,65,-60,0,2.2,.25,0x7a7a74);wallSeg(-5,-60,-5,0,0,2.2,.25,0x7a7a74);wallSeg(65,-60,65,0,0,2.2,.25,0x7a7a74);
+ const gate=makeDoor(28,0,0,'x',5.8,true,{steel:true,hp:4,id:'gate'});
+ // warehouse with bomb
+ const wh=building({x:35,z:-38,w:22,d:16,h:5,y:0,col:0x8a8f94,inCol:0x9aa0a4,roofCol:0x5a6066,floor:0x4a4a48,doors:[{side:'s',at:6,locked:true,id:'wh'},{side:'w',at:4,locked:true,steel:true}],inner:[{x1:-11,z1:0,x2:2,z2:0,door:{at:9,locked:false}},{x1:2,z1:-8,x2:2,z2:8,door:{at:12,locked:true,id:'lab'}}]});
+ const office=building({x:8,z:-14,w:10,d:8,h:3,y:0,col:0xa8a49a,doors:[{side:'e',at:4,locked:false}],roofCol:0x555a5e});
+ for(let i=0;i<5;i++)crate(30+i*1.2,-44,0x5a4a32,1,0);crate(26,-33,0x4f5b3a,1,0);crate(43,-34,0x4f5b3a,1,0);
+ [[44,-12,0],[52,-20,1.57],[14,-40,.3]].forEach(([x,z,r])=>parkedCar(x,z,r,pick([0x2a2d31,0x6a6e72,0x7a2a22])));
+ const v=buildVehicle('minibus');v.g.position.set(55,0,-45);v.g.rotation.y=.2;v.g.traverse(o=>{if(o.isMesh&&o.material===lam(0x18191b))o.material=lam(0xe0e0dc);});W.group.add(v.g);W.colliders.push({box:new THREE.Box3().setFromObject(v.g).expandByScalar(-.2),active:true,kind:'veh'});
+ [[28,3],[10,-2],[50,-8],[35,-29]].forEach(([x,z])=>{const p=cyl(.07,.09,5,0x444444,6);p.position.set(x,2.5,z);W.group.add(p);lampLight(x,5,z,0xffd8a0,1.1,18);});
+ const bomb=bombDevice(41,-41,0,360);
+ const g1=[spawnEnemy(25,4,{yaw:0}),spawnEnemy(31,4.5,{yaw:0,gun:'pkm'})];
+ const yardE=[spawnEnemy(20,-20,{patrol:[V3(20,0,-20),V3(50,0,-15),V3(55,0,-50),V3(10,0,-50)]}),spawnEnemy(9,-15,{static:true,yaw:1.5}),spawnEnemy(52,-28,{static:true,yaw:-1,crouch:true})];
+ const whE=[spawnEnemy(28,-35,{static:true,yaw:0}),spawnEnemy(33,-33,{static:true,yaw:.2}),spawnEnemy(30,-43,{static:true,yaw:0,crouch:true}),spawnEnemy(40,-36,{static:true,yaw:-1.6}),spawnEnemy(43,-43,{static:true,yaw:-1.2})];
+ const drop=V3(4,0,40);ammoCrate(8,44);const exZ=zoneMarker(drop.x,drop.z,3.5);exZ.vis=false;
+ return{spawn:drop.clone(),firstLook:V3(28,0,0),lz:drop,approach:V3(0,0,1),extraction:drop,road:[V3(0,0,190),V3(0,0,90),V3(3,0,46)],
+  intro(){radio('Merkez','Kartal Timi, sanayi sitesindeki depoda kurulu bir patlayıcı düzenek var. Zamanlayıcı çalışıyor: 6 dakikanız var!',6);setTimeout(()=>radio('Kartal-1','Hızlı ve sert gireceğiz. Kapıyı kır, depoya ilerle, fünyeyi sök!',5),6000);},
+  obj:[{text:'Patlayıcıyı bul ve fünyesini sök',prog:()=>bomb.defused?'':'⏱ '+FMT(bomb.left),check:()=>bomb.defused,pos:bomb.pos},
+   {text:'Atölyedeki militanları etkisiz hale getir',prog:PROG(W.enemies),check:()=>allDead(W.enemies),pos:()=>{const e=W.enemies.find(e=>!e.dead&&!e.surr&&e.spotted);return e?e.pos:V3(35,0,-30);}},
+   {text:'Araca dön',check:()=>{exZ.vis=bomb.defused;return bomb.defused&&nearP(drop,5);},pos:drop}],
+  update(dt){updateBomb(bomb,dt);}};}
+
+// ---------- VADİ PUSUSU ----------
+function buildAmbush(){
+ setupEnv(G.sel.tod||'ogle',80,480);
+ hillsTerrain({style:'dag',freq:.007,sx:21,sz:5,amp:60,base:-6,ridge:10,snowY:200,flats:[[0,0,12,12],[-30,-120,12,10]],roads:[[[0,250],[0,120],[-5,40],[0,0],[5,-80],[-30,-120]]]});
+ // valley walls: raise sides
+ scatter(200,140,[[0,0,16],[-30,-120,14]],{bush:.55});
+ for(let i=0;i<5;i++)sandbags(rand(-6,6),rand(-6,6),2.6,rand(0,3),1);
+ const wreck=buildVehicle('cobra');wreck.g.position.set(3,terrainH(3,10),10);wreck.g.rotation.y=.4;W.group.add(wreck.g);W.colliders.push({box:new THREE.Box3().setFromObject(wreck.g).expandByScalar(-.2),active:true,kind:'veh'});burst(V3(3,2,10),10,'smoke');
+ const ridge=[];mevziAt(-45,-20,ridge,3,['pkm','ak','ar'],V3(0,0,0));mevziAt(48,-35,ridge,3,['ak','svd','ar'],V3(0,0,0));
+ const spawnPts=[V3(-60,0,-40),V3(60,0,-50),V3(-55,0,30),V3(55,0,25),V3(0,0,-90),V3(-30,0,60)];
+ let tLeft=150,wave=0,nextWave=12;const waves=[];
+ const ex=V3(-30,0,-120);const exZ=zoneMarker(ex.x,ex.z,5);exZ.vis=false;ammoCrate(-2,3);ammoCrate(4,-4);
+ return{spawn:V3(0,0,30),firstLook:V3(0,0,-20),lz:V3(0,0,24),approach:V3(0,0,1),extraction:ex,road:[V3(0,0,170),V3(0,0,90),V3(-3,0,40),V3(0,0,26)],
+  intro(){radio('Kartal-3','Pusu! Pusu! Öndeki Cobra vuruldu!',3);setTimeout(()=>radio('Merkez','Kartal Timi, helikopter yolda. İki buçuk dakika dayanın! Konvoyu koruyun.',5),3000);setTimeout(()=>radio('Kartal-1','Herkes siper alsın! Sırtları gözle, makineli sola!',4),8000);
+   W.enemies.forEach(e=>{e.state='alert';e.lastSeen=V3(0,0,10);e.react=rand(.5,2);});},
+  obj:[{text:'Helikopter gelene kadar dayan',prog:()=>'⏱ '+FMT(tLeft),check:()=>tLeft<=0,pos:null,onDone(){radio('Pilot','Kartal Timi, iniş noktasının üzerindeyiz! Vadinin güneyine gelin!',5);exZ.vis=true;}},
+   {text:'Sırttaki mevzileri sustur',optional:1,prog:PROG(ridge),check:()=>allDead(ridge),pos:V3(-45,0,-20)},
+   {text:'Tahliye noktasına ulaş',check:()=>tLeft<=0&&nearP(ex,6),pos:ex}],
+  update(dt){if(tLeft>0)tLeft-=dt;nextWave-=dt;if(nextWave<=0&&tLeft>15){nextWave=26;wave++;const n=2+Math.min(3,wave);for(let i=0;i<n;i++){const sp=pick(spawnPts);const e=spawnEnemy(sp.x+rand(-6,6),sp.z+rand(-6,6),{leash:999});e.state='alert';e.lastSeen=P.pos.clone();e.react=rand(.5,1.5);e.lastHeard=G.time+30;}feed('Yeni düşman grubu sırtlardan iniyor!','#f2b83d');}}};}
+
+// ---------- SINIR HATTI ----------
+function buildBorder(){
+ setupEnv(G.sel.tod||'gece',60,380);
+ hillsTerrain({style:'kurak',freq:.008,sx:9,sz:2,amp:70,base:-20,ridge:12,flats:[[0,150,14,12],[0,-40,16,10],[40,-110,10,10]]});
+ scatter(70,220,[[0,150,18],[0,-40,20]],{bush:.8,rockCols:[0x8a7c66,0x7a6e5c,0x9a8c74]});
+ // border wall & watchtower
+ for(let x=-200;x<200;x+=8){const y=terrainH(x,-150);const w=box(8,3,.4,0x9a9890);w.position.set(x+4,y+1.5,-150);W.group.add(w);}
+ const tw=buildVehicle('kirpi');tw.g.position.set(70,terrainH(70,140),140);tw.g.rotation.y=-.4;W.group.add(tw.g);
+ campfire(-3,-38);const smug=[];const cy=terrainH(0,-40);
+ [[-6,-44,.5],[5,-46,-.4],[0,-50,0]].forEach(([x,z,r])=>mule(x,z,r));
+ const crates=[];for(let i=0;i<4;i++){crates.push(crate(-2+i*1.1,-45,0x4f5b3a));}
+ [[-5,-35],[2,-33],[6,-40],[-8,-41],[3,-47],[-2,-36]].forEach(([x,z],i)=>smug.push(spawnEnemy(x,z,{yaw:rand(-3,3),surr:.85,crouch:i%3===0,leash:15,gun:i===2?'pkm':null})));
+ const scouts=[spawnEnemy(40,-110,{patrol:[V3(40,0,-110),V3(20,0,-80),V3(-20,0,-90)],surr:.6}),spawnEnemy(-30,10,{patrol:[V3(-30,0,10),V3(10,0,20),V3(30,0,-10)],surr:.6})];
+ const load={pos:V3(0,cy,-44),label:'[E] Kaçak silah yükünü ele geçir',range:2.6,done:false,act(it){it.done=true;radio('Kartal-1','Yük ele geçirildi: uzun namlulu silahlar ve mühimmat!',3);}};W.interact.push(load);
+ const ex=V3(0,0,150);const exZ=zoneMarker(ex.x,ex.z,4);exZ.vis=false;ammoCrate(5,146);
+ return{spawn:V3(0,0,150),firstLook:V3(0,0,0),lz:V3(0,0,150),approach:V3(0,0,1),extraction:ex,road:[V3(0,0,230),V3(0,0,190),V3(0,0,156)],
+  intro(){radio('Merkez','Kartal Timi, sınır hattından silah kaçıran bir grup ateş başında mola vermiş. Mümkün olduğunca canlı yakalayın.',6);setTimeout(()=>radio('Kartal-1','Sessiz yaklaşıyoruz. Şok bombası, sonra V ile teslim ol çağrısı!',5),6000);},
+  obj:[{text:'En az 2 kaçakçıyı canlı yakala (kelepçele)',prog:()=>`${G.stats.arrests}/2`,check:()=>G.stats.arrests>=2,pos:V3(0,0,-40)},
+   {text:'Kaçakçı grubunu etkisiz hale getir',prog:PROG(smug),check:()=>allDead(smug),pos:V3(0,0,-40)},
+   {text:'Kaçak silah yükünü ele geçir',check:()=>load.done,pos:load.pos},
+   {text:'Tahliye noktasına dön',check:()=>{exZ.vis=load.done;return load.done&&nearP(ex,5);},pos:ex}],update(){}};}
+
+// ---------- HÜCRE EVİ (ŞEHİR) ----------
+function buildCity(){
+ setupEnv(G.sel.tod||'aksam',50,300);flatGround(400,0x5c5c58);
+ const road=(x,z,w,d)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),lam(0x2e3034));m.rotation.x=-Math.PI/2;m.position.set(x,.02,z);m.receiveShadow=true;W.group.add(m);};
+ road(0,0,12,400);road(0,-30,400,12);road(0,60,400,12);
+ // sidewalk lines
+ for(let z=-190;z<190;z+=6){const l=box(.2,.01,2.5,0xd8d8d0);l.position.set(0,.03,z);l.castShadow=false;W.group.add(l);}
+ // city blocks (closed)
+ const blocks=[[-25,-60,26,22,15],[25,-62,24,20,12],[-28,25,22,30,18],[-28,95,26,26,12],[28,95,22,24,21],[-60,-60,24,22,24],[60,25,24,30,9],[60,-62,22,20,15]];
+ blocks.forEach(([x,z,w,d,h])=>blockBuilding(x,z,w,d,h,pick([0xffffff,0xe8dcc8,0xd8d0c8,0xf0e0d0])));
+ // target block: two enterable houses + courtyard at (28,20)
+ const A=building({x:22,z:12,w:12,d:10,h:3.2,y:0,col:0xd6cbb6,inCol:0xe0d6c4,roofCol:0x6a5a4a,floor:0x7a6a5a,doors:[{side:'w',at:5,locked:true,id:'A'}],inner:[{x1:-6,z1:0,x2:2,z2:0,door:{at:4}},{x1:2,z1:-5,x2:2,z2:5,door:{at:7.5,locked:true,id:'Ah'}}]});
+ const Bh=building({x:22,z:34,w:10,d:9,h:3.2,y:0,col:0xc8bca6,roofCol:0x6a5a4a,doors:[{side:'w',at:2.2,locked:true,id:'B'}],inner:[{x1:-5,z1:0,x2:5,z2:0,door:{at:3}}]});
+ wallSeg(16,5,16,7,0,2.2,.3,0x9a9488);wallSeg(16,17,16,29,0,2.2,.3,0x9a9488);
+ [[-8,-10,0],[8,10,0],[-8,30,3.14],[8,-45,0],[-9,75,0]].forEach(([x,z,r])=>parkedCar(x,z,r,pick([0x2a2d31,0x8a8e92,0x7a2a22,0x2a4a7a,0xd8d8d0])));
+ [[-7,-20],[7,0],[-7,20],[7,45],[-7,-50]].forEach(([x,z])=>{const p=cyl(.07,.09,6,0x444444,6);p.position.set(x,3,z);W.group.add(p);lampLight(x,6,z,0xffd8a0,1.2,20);});
+ spawnDummy(-8,-2,false,1.4);spawnDummy(-9,44,false,0.2);spawnDummy(9,52,false,3);
+ const hostA=spawnHostage(26,9,0);const hostB=spawnHostage(25,37,Math.PI);
+ const eA=[spawnEnemy(18,15,{static:true,yaw:-1.6}),spawnEnemy(21,9,{static:true,yaw:-1.2}),spawnEnemy(25,15.5,{static:true,yaw:-1.6,crouch:true}),spawnEnemy(27,13,{static:true,yaw:-1.6})];
+ const eB=[spawnEnemy(19,36,{static:true,yaw:-1.6}),spawnEnemy(24,32,{static:true,yaw:-1})];
+ const street=[spawnEnemy(12,22,{patrol:[V3(12,0,22),V3(12,0,2),V3(12,0,42)],gun:'ar'}),spawnEnemy(14,48,{static:true,yaw:Math.PI,crouch:true})];
+ const drop=V3(-2,0,-120);ammoCrate(3,-116);const exZ=zoneMarker(drop.x,drop.z,3.5);exZ.vis=false;
+ return{spawn:drop.clone(),firstLook:V3(0,0,0),lz:drop,approach:V3(0,0,-1),extraction:drop,road:[V3(-2,0,-190),V3(-2,0,-150),V3(-2,0,-126)],
+  intro(){radio('Merkez','Kartal Timi, mahalledeki iki evde hücre yapılanması ve iki rehine var. Sokakta siviller dolaşıyor, teşhis etmeden ateş yok!',7);setTimeout(()=>radio('Kartal-1','Anlaşıldı. Önce ana ev, sonra arka ev. Kalkancı önde!',5),7000);},
+  obj:[{text:'Ana evdeki rehineyi kurtar',check:()=>hostA.freed,pos:()=>hostA.freed?null:hostA.pos},{text:'Arka evdeki rehineyi kurtar',check:()=>hostB.freed,pos:()=>hostB.freed?null:hostB.pos},
+   {text:'Hücre üyelerini etkisiz hale getir',prog:PROG(W.enemies),check:()=>allDead(W.enemies),pos:()=>{const e=W.enemies.find(e=>!e.dead&&!e.surr&&e.spotted);return e?e.pos:V3(22,0,20);}},
+   {text:'Rehinelerle birlikte araca dön',check:()=>{exZ.vis=hostA.freed&&hostB.freed;return hostA.freed&&hostB.freed&&nearP(drop,5)&&W.hostages.every(h=>h.pos.distanceTo(drop)<10);},pos:drop}],update(){}};}
+
 const MISSIONS=[
  {id:'egitim',name:'Temel Eğitim',place:'Özel Harekat Eğitim Merkezi',time:'Gündüz',build:buildTraining,insertion:false,desc:'Atış poligonu, koçbaşı, kapı şarjı, şok bombası, balistik kalkan ve eğitim evi. Tüm aletleri burada öğrenirsin.'},
- {id:'dag',name:'Kara Dağ Operasyonu',place:'Kırsal · Dağlık arazi',time:'Öğleden sonra',build:buildMountain,insertion:true,desc:'Helikopter ya da zırhlı araçla bölgeye intikal. Üç mevziyi temizle, keskin nişancıya dikkat et, dağdaki sığınağı bas ve mühimmat deposunu ele geçir.'},
- {id:'baskin',name:'Şafak Baskını',place:'Kırsal · Örgüt evi',time:'Gece 03:40',build:buildRaid,insertion:true,desc:'Zırhlı araçla gece intikali. Avlu kapısını kır, evi temizle, rehineyi kurtar. Gece görüşü (N) şart.'},
+ {id:'dag',tod:'ogle',defVeh:'heli',name:'Kara Dağ Operasyonu',place:'Kırsal · Dağlık arazi',time:'Öğleden sonra',build:buildMountain,insertion:true,desc:'Helikopter ya da zırhlı araçla bölgeye intikal. Üç mevziyi temizle, keskin nişancıya dikkat et, dağdaki sığınağı bas ve mühimmat deposunu ele geçir.'},
+ {id:'baskin',tod:'gece',defVeh:'ejder',name:'Şafak Baskını',place:'Kırsal · Örgüt evi',time:'Gece 03:40',build:buildRaid,insertion:true,desc:'Zırhlı araçla gece intikali. Avlu kapısını kır, evi temizle, rehineyi kurtar. Gece görüşü (N) şart.'},
+ {id:'magara',name:'Cudi Mağara Operasyonu',place:'Kırsal · Kurak dağlar',tod:'sabah',defVeh:'heli',build:buildCave,insertion:true,desc:'Vadiyi gözleyen iki keskin nişancı mevzisini sustur, mağaranın çelik kapısını kır, silah deposuna imha patlayıcısı kur ve güvenli mesafeye çekil.'},
+ {id:'koy',name:'Köy Evi Baskını',place:'Kırsal · Köy',tod:'sabah',defVeh:'kirpi',build:buildVillage,insertion:true,desc:'Köyde saklanan bomba ustasını yakala. Evlerde siviller var. Şok bombası ve "Teslim ol!" (V) çağrısıyla canlı yakalamaya çalış.'},
+ {id:'atolye',name:'Patlayıcı Atölyesi',place:'Kentsel · Sanayi sitesi',tod:'aksam',defVeh:'minibus',build:buildWorkshop,insertion:true,desc:'Depoda kurulu bir düzenek var ve zamanlayıcı çalışıyor: 6 dakika. Kapıyı kır, depoya dal, fünyeyi sök.'},
+ {id:'pusu',name:'Vadi Pususu',place:'Kırsal · Dağ yolu',tod:'ogle',defVeh:'ejder',build:buildAmbush,insertion:true,desc:'Konvoy vadide pusuya düştü. Sırtlardan gelen dalgalara karşı helikopter gelene kadar 2,5 dakika dayan, sonra tahliye noktasına koş.'},
+ {id:'sinir',name:'Sınır Hattı',place:'Sınır · Kurak tepeler',tod:'gece',defVeh:'heli',build:buildBorder,insertion:true,desc:'Ateş başında mola veren silah kaçakçılarına sessizce yaklaş. En az ikisini canlı yakala, kaçak yükü ele geçir.'},
+ {id:'sehir',name:'Hücre Evi Operasyonu',place:'Kentsel · Mahalle',tod:'aksam',defVeh:'minibus',build:buildCity,insertion:true,desc:'Mahalledeki iki evde hücre yapılanması ve iki rehine var. Sokakta siviller dolaşıyor. Her iki evi de bas, rehinelerle araca dön.'},
 ];
 
 // ================= HUD UPDATE =================
@@ -1469,8 +1681,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!
  if(go==='menu'||go==='missions'){if(G.state==='paused'||G.state==='over'||G.state==='debrief'){toMenuWorld();}}
  showScreen(go);
  if((go==='controls'||go==='settings')){const back=$(SCREENS[go]).querySelector('[data-go]');back.dataset.go=G.state==='paused'?'pause':(go==='settings'?'back':'menu');}});
-function renderMissions(){const best=store.get('best',{});$('missionCards').innerHTML=MISSIONS.map(m=>`<button class="mcard" data-m="${m.id}"><div class="tags"><span class="tag red">${m.insertion?'Operasyon':'Eğitim'}</span><span class="tag">${m.time}</span><span class="tag">${m.place}</span></div><h3>${m.name}</h3><p>${m.desc}</p><div class="tags">${best[m.id]?`<span class="tag" style="color:var(--gold);border-color:var(--gold)">En iyi: ${'★'.repeat(best[m.id])}${'☆'.repeat(3-best[m.id])}</span>`:'<span class="tag">Henüz oynanmadı</span>'}</div></button>`).join('');
- $('missionCards').querySelectorAll('.mcard').forEach(b=>b.onclick=()=>{sndClick();G.sel.mission=b.dataset.m;const m=MISSIONS.find(x=>x.id===b.dataset.m);if(m.defVeh)G.sel.veh=m.defVeh;if(m.id==='baskin'&&G.sel.veh==='heli')G.sel.veh='ejder';if(m.id==='dag'&&G.sel.veh!=='heli')G.sel.veh='heli';showScreen('loadout');});}
+function renderMissions(){const best=store.get('best',{});$('missionCards').innerHTML=MISSIONS.map(m=>`<button class="mcard" data-m="${m.id}"><div class="tags"><span class="tag red">${m.insertion?'Operasyon':'Eğitim'}</span><span class="tag">${m.tod?TOD[m.tod].n+' (seçilebilir)':m.time}</span><span class="tag">${m.place}</span></div><h3>${m.name}</h3><p>${m.desc}</p><div class="tags">${best[m.id]?`<span class="tag" style="color:var(--gold);border-color:var(--gold)">En iyi: ${'★'.repeat(best[m.id])}${'☆'.repeat(3-best[m.id])}</span>`:'<span class="tag">Henüz oynanmadı</span>'}</div></button>`).join('');
+ $('missionCards').querySelectorAll('.mcard').forEach(b=>b.onclick=()=>{sndClick();G.sel.mission=b.dataset.m;const m=MISSIONS.find(x=>x.id===b.dataset.m);if(m.defVeh)G.sel.veh=m.defVeh;G.sel.tod=m.tod||'ogle';showScreen('loadout');});}
 let loCat='AR';
 function statRows(d){const rows=[['Hasar',d.dmg*(d.pel||1),300],['Atış hızı',d.rpm,1200,' dk'],['Menzil',d.rng,1200,' m'],['Şarjör',d.mag,200],['Kontrol',Math.round(100-d.rec*22),100],['Hareketlilik',Math.round(d.mv*100),110]];
  return rows.map(([n,v,mx,u])=>`<div class="stat"><span>${n}</span><span class="bar"><i style="width:${clamp(v/mx*100,4,100)}%"></i></span><em>${v}${u||''}</em></div>`).join('');}
@@ -1485,6 +1697,7 @@ function renderLoadout(){const m=MISSIONS.find(x=>x.id===G.sel.mission);$('loMis
  $('vehPanel').hidden=!m.insertion;
  $('vList').innerHTML=Object.entries(VEHICLES).map(([k,v])=>`<button class="witem ${k===G.sel.veh?'sel':''}" data-v="${k}"><b>${v.name}</b><span>${v.type} intikali</span></button>`).join('');
  $('vList').querySelectorAll('.witem').forEach(b=>b.onclick=()=>{G.sel.veh=b.dataset.v;sndClick();renderLoadout();});$('vDesc').textContent=VEHICLES[G.sel.veh].full+' — '+VEHICLES[G.sel.veh].desc;
+ $('todPanel').hidden=!m.insertion;$('todRow').innerHTML=Object.entries(TOD).map(([k,t])=>`<button class="tab ${k===G.sel.tod?'on':''}" data-t="${k}">${t.n} ${t.h}</button>`).join('');$('todRow').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{G.sel.tod=b.dataset.t;sndClick();renderLoadout();});
  $('diffRow').innerHTML=Object.entries(DIFF).map(([k,d])=>`<button class="tab ${k===G.sel.diff?'on':''}" data-d="${k}">${d.n}</button>`).join('');$('diffRow').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{G.sel.diff=b.dataset.d;renderLoadout();});
  store.set('sel',{primary:G.sel.primary,secondary:G.sel.secondary,diff:G.sel.diff});}
 let armCat='ALL',armSel=0;
@@ -1493,7 +1706,7 @@ function renderArmory(){$('armCount').textContent=WEAPONS.length;const cats=['AL
  $('armList').innerHTML=WEAPONS.filter(w=>armCat==='ALL'||w.cat===armCat).map(w=>`<button class="witem ${w.id===armSel?'sel':''}" data-w="${w.id}"><b>${w.name}</b><span>${w.catName} · ${w.origin}</span></button>`).join('');
  $('armList').querySelectorAll('.witem').forEach(b=>b.onclick=()=>{armSel=+b.dataset.w;renderArmory();});$('armDetail').innerHTML=wDetailHTML(WEAPONS[armSel]);}
 function renderVehicles(){$('vehCards').innerHTML=Object.entries(VEHICLES).map(([k,v])=>`<div class="mcard" style="cursor:default"><div class="tags"><span class="tag red">${v.type}</span></div><h3>${v.name}</h3><p><b style="color:var(--fg)">${v.full}</b></p><p>${v.desc}</p></div>`).join('')+`<div class="mcard" style="cursor:default"><div class="tags"><span class="tag">Not</span></div><h3>Eğitim Merkezinde</h3><p>Tüm araçları ve helikopteri Temel Eğitim görevinde yakından görebilirsin. Görevlerde intikal aracını teçhizat ekranında seçersin.</p></div>`;}
-function renderControls(){const k=[['W A S D','Hareket'],['Fare','Bakış (ok tuşları da çalışır)'],['Sol tık','Ateş / koçbaşı ile vur'],['Sağ tık','Nişan al (dürbün)'],['Shift','Koş'],['C','Çömel / kalk'],['Boşluk','Zıpla · sinematiği geç'],['R','Şarjör değiştir'],['X','Atış modu (otomatik / tek)'],['1','Ana silah'],['2','Tabanca'],['3','Koçbaşı (kapı kırıcı)'],['4','Balistik kalkan + tabanca'],['E','Kapı aç · rehine kurtar · kelepçele · ilk yardım · ikmal'],['G','Şok bombası at'],['T','Sis bombası at'],['B','Kapı şarjı yerleştir / patlat'],['H','İlk yardım kiti'],['N','Gece görüş dürbünü'],['L','Silah feneri aç / kapat'],['F','Tim emri: takip et / pozisyonu tut'],['Esc','Duraklat']];
+function renderControls(){const k=[['W A S D','Hareket'],['Fare','Bakış (ok tuşları da çalışır)'],['Sol tık','Ateş / koçbaşı ile vur'],['Sağ tık','Nişan al (dürbün)'],['Shift','Koş'],['C','Çömel / kalk'],['Boşluk','Zıpla · sinematiği geç'],['R','Şarjör değiştir'],['X','Atış modu (otomatik / tek)'],['1','Ana silah'],['2','Tabanca'],['3','Koçbaşı (kapı kırıcı)'],['4','Balistik kalkan + tabanca'],['E','Kapı aç · rehine kurtar · kelepçele · ilk yardım · ikmal'],['G','Şok bombası at'],['T','Sis bombası at'],['B','Kapı şarjı yerleştir / patlat'],['H','İlk yardım kiti'],['N','Gece görüş dürbünü'],['L','Silah feneri aç / kapat'],['V','"Teslim ol!" diye bağır'],['F','Tim emri: takip et / pozisyonu tut'],['Esc','Duraklat']];
  $('keyList').innerHTML=k.map(([a,b])=>`<div><span class="kbd">${a}</span>${b}</div>`).join('');}
 function pauseGame(){if(G.state!=='play')return;G.state='paused';showScreen('pause');}
 function resumeGame(fromLock){showScreen(null);G.state='play';if(!fromLock&&!G.fallbackLook)lockPointer();}
