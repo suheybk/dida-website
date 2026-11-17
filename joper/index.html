@@ -485,7 +485,7 @@ function flatGround(size,color){TER.flat=true;TER.size=size;const g=new THREE.Me
 function clearWorld(){
  if(W.group){scene.remove(W.group);W.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!Array.isArray(o.material)&&o.material.map&&o.material.map.isTexture&&!Object.values(TEX).includes(o.material.map)){o.material.map.dispose();o.material.dispose();}});}
  W.group=new THREE.Group();scene.add(W.group);
- Object.assign(W,{colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
+ Object.assign(W,{lead:null,colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
  loopStopAll();
 }
 function addCollider(minx,miny,minz,maxx,maxy,maxz,kind='wall',ref=null){const c={box:new THREE.Box3(V3(minx,miny,minz),V3(maxx,maxy,maxz)),active:true,kind,ref};W.colliders.push(c);return c;}
@@ -1041,13 +1041,19 @@ function enemyShoot(e,t){
 
 function updateAllies(dt){
  const fwd=camFwd();fwd.y=0;fwd.normalize();const cr=W.crumbs;
+ // lead direction: player's movement direction (smoothed); facing when standing still
+ if(!W.lead){W.lead=fwd.clone();W.leadA=Math.atan2(fwd.x,fwd.z);}const mv=Math.hypot(P.vel.x,P.vel.z);const tA=mv>.6?Math.atan2(P.vel.x,P.vel.z):Math.atan2(fwd.x,fwd.z);W.leadA+=angDiff(W.leadA,tA)*clamp(dt*(mv>.6?5:1.5),0,1);W.lead.set(Math.sin(W.leadA),0,Math.cos(W.leadA));
+ const pEye=V3(P.pos.x,P.pos.y+1.1,P.pos.z);
  W.allies.forEach((a,i)=>{
   if(a.downed){a.m.root.position.copy(a.pos);continue_ally(a);return;}
   // follow
   let des=null;if(teamHold&&a.holdPos)des=a.holdPos;
   else if(a.role==='shield'){const cand=V3(P.pos.x+fwd.x*2.3+fwd.z*.65,P.pos.y,P.pos.z+fwd.z*2.3-fwd.x*.65);const e1=V3(P.pos.x,P.pos.y+1.2,P.pos.z),e2=V3(cand.x,P.pos.y+1.2,cand.z);if(los(e1,e2,false)&&!insideCollider(cand))des=cand;}
-  if(!des){const idx=cr.length-1-Math.round(Math.max(1,i)*.95/.25);des=cr[Math.max(0,idx)]||P.pos;}
-  const pd=Math.hypot(des.x-P.pos.x,des.z-P.pos.z);if(!teamHold&&a.role!=='shield'&&pd<.8+Math.max(1,i)*.85){const ad=Math.hypot(a.pos.x-P.pos.x,a.pos.z-P.pos.z);des=ad<2?V3(P.pos.x+(a.pos.x-P.pos.x)/(ad||1)*2.6,a.pos.y,P.pos.z+(a.pos.z-P.pos.z)/(ad||1)*2.6):a.pos;}
+  if(!des){const rank=Math.max(1,i);const slot=V3(P.pos.x-W.lead.x*rank*1.0,P.pos.y,P.pos.z-W.lead.z*rank*1.0);slot.y=groundAt(slot.x,slot.z,P.pos.y);
+   if(!insideCollider(slot)&&los(pEye,V3(slot.x,slot.y+1.1,slot.z),false)&&los(V3(a.pos.x,a.pos.y+1.1,a.pos.z),V3(slot.x,slot.y+1.1,slot.z),false))des=slot;
+   else{const idx=cr.length-1-Math.round(rank*.95/.25);des=cr[Math.max(0,idx)]||P.pos;}}
+  const pd=Math.hypot(des.x-P.pos.x,des.z-P.pos.z);if(false){const ad=Math.hypot(a.pos.x-P.pos.x,a.pos.z-P.pos.z);des=ad<2?V3(P.pos.x+(a.pos.x-P.pos.x)/(ad||1)*2.6,a.pos.y,P.pos.z+(a.pos.z-P.pos.z)/(ad||1)*2.6):a.pos;}
+  {const sx=des.x-a.pos.x,sz=des.z-a.pos.z;const L=Math.hypot(sx,sz);if(L>.5){const px=P.pos.x-a.pos.x,pz=P.pos.z-a.pos.z;const t=(px*sx+pz*sz)/(L*L);if(t>0&&t<1){const cx=a.pos.x+sx*t-P.pos.x,cz=a.pos.z+sz*t-P.pos.z;const cd=Math.hypot(cx,cz);if(cd<1.2){const nx=-sz/L,nz=sx/L;const side=(cx*nx+cz*nz)>=0?1:-1;des=V3(P.pos.x+nx*side*1.5,des.y,P.pos.z+nz*side*1.5);}}}}
   const dx=des.x-a.pos.x,dz=des.z-a.pos.z;const d=Math.hypot(dx,dz);let spd=0;
   if(d>.25){spd=d>8?6.4:d>2?5:Math.max(1.2,P.speed);if(a.target&&d<6)spd*=.6;const st=Math.min(d,spd*dt);const bx=a.pos.x,bz=a.pos.z;moveActor(a,dx/d*st,dz/d*st);
    const moved=Math.hypot(a.pos.x-bx,a.pos.z-bz);if(moved<st*.3)a.stuck+=dt;else a.stuck=Math.max(0,a.stuck-dt);}
