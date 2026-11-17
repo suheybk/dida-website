@@ -510,7 +510,7 @@ function flatGround(size,color){TER.flat=true;TER.size=size;const g=new THREE.Me
 function clearWorld(){
  if(W.group){scene.remove(W.group);W.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!Array.isArray(o.material)&&o.material.map&&o.material.map.isTexture&&!Object.values(TEX).includes(o.material.map)){o.material.map.dispose();o.material.dispose();}});}
  W.group=new THREE.Group();scene.add(W.group);
- Object.assign(W,{lead:null,envNight:false,dayHemi:.75,sunDisk:null,defuse:null,colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
+ Object.assign(W,{pry:null,lead:null,envNight:false,dayHemi:.75,sunDisk:null,defuse:null,colliders:[],doors:[],enemies:[],allies:[],hostages:[],hittables:[],interact:[],decals:[],fx:[],tracers:[],grenades:[],smokes:[],crumbs:[],heliObj:null,vehObj:null,lights:[],markers:[],targets:[]});
  loopStopAll();
 }
 function addCollider(minx,miny,minz,maxx,maxy,maxz,kind='wall',ref=null){const c={box:new THREE.Box3(V3(minx,miny,minz),V3(maxx,maxy,maxz)),active:true,kind,ref};W.colliders.push(c);return c;}
@@ -1072,7 +1072,7 @@ function alertEnemy(e,pos,direct){if(e.dead||e.surr)return;if(e.state==='idle'){
 
 // ================= PLAYER UPDATE =================
 function updatePlayer(dt){
- if(P.dead)return;if(P.downed){updateDowned(dt);return;}
+ if(P.dead)return;if(P.climb){const C=P.climb;C.t+=dt;const k=Math.min(1,C.t/1.1);const e=k*k*(3-2*k);const a=k<.5?C.from.clone().lerp(C.mid,e*2):C.mid.clone().lerp(C.to,(e-.5)*2);P.pos.set(a.x,a.y+Math.sin(k*Math.PI)*.25,a.z);camera.position.set(P.pos.x,P.pos.y+eyeH(),P.pos.z);camera.rotation.set(P.pitch-.25*Math.sin(k*Math.PI),P.yaw,Math.sin(k*Math.PI*2)*.05);G.camY=null;if(k>=1){P.climb=null;P.vel.set(0,0,0);P.pos.copy(C.to);}const lc=W.crumbs[W.crumbs.length-1];if(!lc||lc.distanceTo(P.pos)>.25)W.crumbs.push(P.pos.clone());return;}if(P.downed){updateDowned(dt);return;}
  const w=curW();const def=w?w.def:null;
  // look via arrows
  const ks=1.8*dt*G.settings.sens*(P.aimT>.5?1/curZoom():1);if(keys.ArrowLeft)P.yaw+=ks;if(keys.ArrowRight)P.yaw-=ks;if(keys.ArrowUp)P.pitch=clamp(P.pitch+ks,-1.5,1.5);if(keys.ArrowDown)P.pitch=clamp(P.pitch-ks,-1.5,1.5);
@@ -1183,8 +1183,11 @@ function updateAllies(dt){
  const pEye=V3(P.pos.x,P.pos.y+1.1,P.pos.z);
  W.allies.forEach((a,i)=>{
   if(a.downed){a.m.root.position.copy(a.pos);continue_ally(a);return;}
+  if(a.prone){a.m.root.position.copy(a.pos);a.m.root.rotation.y=a.proneYaw||0;return;}
+  if(a.lift){const L2=a.lift;L2.t+=dt;const k=Math.min(1,L2.t/.8);a.pos.lerpVectors(L2.from,L2.to,k);a.pos.y+=Math.sin(k*Math.PI)*.4;a.m.root.position.copy(a.pos);if(k>=1){a.lift=null;a.pos.copy(L2.to);}return;}
+  if(!a.squad&&!a.stepping&&P.pos.y>-6.2){for(const t of TDOORS){if(t.ready&&a.pos.y<-6.5&&Math.hypot(a.pos.x-t.stepPoint.x,a.pos.z-t.stepPoint.z)<1.6){a.lift={t:0,from:a.pos.clone(),to:t.inPoint.clone().add(V3(0,0,(Math.random()-.5)*1.2))};break;}}}
   // follow
-  let des=null;if(P.downed&&a===P.reviver){des=P.pos.clone();}else if(a.squad){des=a.squad.goal?a.squad.goal.clone().add(V3(Math.sin(a.sqi*2.1)*2.6,0,Math.cos(a.sqi*2.1)*2.6)):a.pos.clone();}else if(teamHold&&a.holdPos)des=a.holdPos;
+  let des=null;if(a.stepping){des=a.stepping.stepPoint.clone();}else if(P.downed&&a===P.reviver){des=P.pos.clone();}else if(a.squad){des=a.squad.goal?a.squad.goal.clone().add(V3(Math.sin(a.sqi*2.1)*2.6,0,Math.cos(a.sqi*2.1)*2.6)):a.pos.clone();}else if(teamHold&&a.holdPos)des=a.holdPos;
   else if(a.role==='shield'){const cand=V3(P.pos.x+fwd.x*2.3+fwd.z*.65,P.pos.y,P.pos.z+fwd.z*2.3-fwd.x*.65);const e1=V3(P.pos.x,P.pos.y+1.2,P.pos.z),e2=V3(cand.x,P.pos.y+1.2,cand.z);if(los(e1,e2,false)&&!insideCollider(cand))des=cand;}
   if(!des){const rank=Math.max(1,i);const slot=V3(P.pos.x-W.lead.x*rank*1.0,P.pos.y,P.pos.z-W.lead.z*rank*1.0);slot.y=groundAt(slot.x,slot.z,P.pos.y);
    if(!insideCollider(slot)&&los(pEye,V3(slot.x,slot.y+1.1,slot.z),false)&&los(V3(a.pos.x,a.pos.y+1.1,a.pos.z),V3(slot.x,slot.y+1.1,slot.z),false))des=slot;
@@ -1294,6 +1297,7 @@ function updateAir(dt){const A=AIR.pending;if(!A)return;A.t-=dt;
 // ================= MISSION FRAMEWORK =================
 let M=null;// current mission runtime
 function startMission(id){
+ P.climb=null;
  CINE=null;RIDE=null;W.alliesAboard=false;
  const def=MISSIONS.find(m=>m.id===id);G.sel.mission=id;clearWorld();teamHold=false;
  G.stats={revives:0,shots:0,hits:0,kills:0,heads:0,teamKills:0,arrests:0,dmgTaken:0,allyDown:0,civHit:0,surrShot:0,reloads:0,rams:0,charges:0,time:0};
@@ -2290,50 +2294,101 @@ function genCity(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,320);flatGr
  obj.push(enemyObj('Hücre üyelerini etkisiz hale getir',en,V3(tb[0],0,tb[1])));obj.push(exitObj(drop,host.length>0));
  return{spawn:drop.clone(),firstLook:V3(tb[0],0,tb[1]),lz:drop,approach:V3(0,0,-1),extraction:drop,road:[V3(0,0,-200),V3(0,0,-110),V3(0,0,-46)],intro:introFor(def,'Mahallede siviller var. Çatılara dikkat!'),obj,SQ,update(dt){updateSquads(SQ,dt);}};}
 // ---- METRO
+// ---- METRO (train stopped in tunnel; pry doors, human step)
+const TDOORS=[];
+function toolVM(){if(VM.group)vmRoot.remove(VM.group);const g=new THREE.Group();VM.group=g;vmRoot.add(g);VM.flash=null;VM.muzzle=null;VM.lens=null;VM.mag=null;
+ const bd=box(.12,.14,.42,0xc8a020);bd.position.set(0,0,-.1);g.add(bd);const hd=box(.1,.1,.15,0x222222);hd.position.set(0,.02,.15);g.add(hd);
+ VM.jaws=[];[-1,1].forEach(s=>{const j=box(.03,.05,.32,0x2a2a2a);j.position.set(s*.02,0,-.45);g.add(j);VM.jaws.push(j);});const hose=cyl(.015,.015,.4,0x111111,6);hose.rotation.x=1.2;hose.position.set(.05,-.1,.2);g.add(hose);
+ [-1,1].forEach(s=>{const a=armMesh();a.position.set(s*.08,-.06,.05);a.rotation.set(-.3,s*-.2,0);g.add(a);});g.children.forEach(m=>m.castShadow=false);VM.hip.set(.1,-.22,-.4);VM.ads.copy(VM.hip);g.position.copy(VM.hip);}
 function genMetro(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,300);
- const inPit=(x,z)=>x>-12&&x<12&&z>-96&&z<32;
- buildTerrain(320,160,(x,z)=>inPit(x,z)?-7:0,(x,y,z,ny,col)=>{const n=vnoise(x*.3,z*.3)*.04;if(y<-3)col.setRGB(.3+n,.3+n,.31+n);else col.setRGB(.34+n,.35+n,.37+n);});
- const tile=0xd8dcd8,dark=0x4a4e52;
- addBox(-11.25,-7,-31,2.5,7,130,tile);addBox(11.25,-7,-31,2.5,7,130,tile);addBox(0,-7,-95.25,25,7,2.5,tile);
+ const nc=c.cars||4,L=16,gap=1.2,Z0=-36,PZ0=Math.floor(Z0-nc*(L+gap)-14);const TX=-5.75,FY=-5.8,TOP=-3.55;TDOORS.length=0;
+ const inPit=(x,z)=>x>-12&&x<12&&z>PZ0&&z<32;
+ buildTerrain(Math.max(340,Math.abs(PZ0)*2+80),180,(x,z)=>inPit(x,z)?-7:0,(x,y,z,ny,col)=>{const n=vnoise(x*.3,z*.3)*.04;if(y<-3)col.setRGB(.26+n,.25+n,.24+n);else col.setRGB(.34+n,.35+n,.37+n);});
+ const tile=0xd8dcd8,dark=0x4a4e52,conc=0x6e706e;const midZ=(PZ0+32)/2,lenZ=32-PZ0;
+ addBox(-11.25,-7,midZ,2.5,7,lenZ,conc);addBox(11.25,-7,midZ,2.5,7,lenZ,tile);addBox(0,-7,PZ0+1.25,25,7,2.5,conc);
  addBox(-5.25,-7,31.25,14.5,7,2.5,tile);addBox(9.25,-7,31.25,6.5,7,2.5,tile);addBox(4,-7,31.25,4,7,2.5,dark);
- addBox(0,-.5,-37.25,25,.5,119.5,0x8a8e92);addBox(-5.25,-.5,27.25,14.5,.5,10.5,0x8a8e92);addBox(9.25,-.5,27.25,6.5,.5,10.5,0x8a8e92);
- addBox(3,-7,-36,14,1,116,0x9a9e9a);
+ const slabLen=22.5-PZ0;addBox(0,-.5,PZ0+slabLen/2,25,.5,slabLen,0x8a8e92);addBox(-5.25,-.5,27.25,14.5,.5,10.5,0x8a8e92);addBox(9.25,-.5,27.25,6.5,.5,10.5,0x8a8e92);
+ // platform (station zone) + tunnel wall block
+ addBox(3,-7,-4,14,1,52,0x9a9e9a);const pe=box(.3,.02,52,0xe8c020);pe.position.set(-3.85,-5.99,-4);pe.castShadow=false;W.group.add(pe);
+ addBox(5.5,-7,(PZ0+2.5-32)/2,14,6.5,(-32)-(PZ0+2.5),conc);
+ for(let i=0;i<4;i++)addBox(-2.9,-7,-30.2-i*.4,2.2,1-(i+1)*.25+.0001,.4,0x8a8e92);
  const steps=24;for(let i=0;i<steps;i++){const z0=22+i*(8/steps);addBox(4,-7,z0+4/steps,4,1+(i+1)*.25,8/steps,i%2?0x8a8e92:0x9a9e9e);}
  [1.8,6.2].forEach(x=>addBox(x,-7,26,.2,8,8,0x6a6e72));
  const can=box(6,.2,4,0x2a3a6a);can.position.set(4,3,33);W.group.add(can);[[1.3,31.3],[6.7,31.3],[1.3,34.7],[6.7,34.7]].forEach(([x,z])=>{const p=cyl(.07,.07,3,0x666666,6);p.position.set(x,1.5,z);W.group.add(p);});
  const ms=labelSprite('M  METRO',1);ms.position.set(4,4,35.2);W.group.add(ms);
- for(let z=-85;z<=15;z+=12){addBox(5,-6,z,.8,5.5,.8,0xc8ccc8);}
- for(let z=-80;z<=10;z+=20){const b=box(2,.45,.5,0x6a4a2a);b.position.set(8,-5.75,z);W.group.add(b);}
- for(let x=-3;x<=9;x+=2.4){addBox(x,-6,19.5,.25,1,1.2,0x5a5e62);}
- const ps=labelSprite('PERON 1 · KADIKÖY YÖNÜ',1);ps.position.set(3,-2.2,15);W.group.add(ps);
- for(let z=-80;z<=10;z+=30)lampLight(3,-1.3,z,0xf0f4ff,1.2,26);
- [-6.4,-4.8].forEach(x=>{const r=box(.08,.12,124,0x8a8e90);r.position.set(x,-6.94,-35);r.castShadow=false;W.group.add(r);});
- const nc=c.cars||4,L=16,gap=1.2;const cars=[];const host=[];
- for(let k=0;k<nc;k++){const zs=18-k*(L+gap),ze=zs-L;const col=0xc4c8cc;
-  addBox(-5.6,-7,(zs+ze)/2,2.9,1,L,0x6a6e72);addBox(-7.05,-6,(zs+ze)/2,.12,2.4,L,col);wallSeg(-4.15,ze,-4.15,zs,-6,2.4,.12,col,[{at:4,w:1.4},{at:12,w:1.4}]);
-  [zs,ze].forEach(zz=>{wallSeg(-7.05,zz,-4.15,zz,-6,2.4,.12,col,[{at:1.45,w:1.1}]);});
-  makeDoor(-5.6,-6,zs,'x',1.06,false);makeDoor(-5.6,-6,ze,'x',1.06,false);
-  if(k<nc-1){addBox(-5.6,-7,ze-gap/2,1.6,1,gap,0x4a4e52);}
-  const roof=box(3.1,.2,L,0xb8bcc0);roof.position.set(-5.6,-3.5,(zs+ze)/2);W.group.add(roof);
-  [-7.13,-4.07].forEach(x=>{const st=box(.04,.18,L,0xc81e2e);st.position.set(x,-5.2,(zs+ze)/2);st.castShadow=false;W.group.add(st);const wn=box(.04,.7,L-1,0x1d2a33);wn.position.set(x,-4.4,(zs+ze)/2);wn.castShadow=false;W.group.add(wn);});
-  for(let z=ze+1.5;z<zs-1;z+=3){const po=cyl(.025,.025,2.4,0xd0d4d8,6);po.position.set(-5.6,-4.8,z);W.group.add(po);}
-  [-6.75,-4.45].forEach(x=>{const bn=box(.45,.45,L-2,0x2a4a8a);bn.position.set(x,-5.77,(zs+ze)/2);W.group.add(bn);});
-  const lt=new THREE.Mesh(new THREE.BoxGeometry(.3,.03,L-1),new THREE.MeshBasicMaterial({color:0xf4f8ff}));lt.position.set(-5.6,-3.62,(zs+ze)/2);W.group.add(lt);
-  const ce=[];const ne=(c.per||2)+(k%2);for(let i=0;i<ne;i++)ce.push(spawnEnemy(-5.6+rand(-.4,.4),ze+2+Math.random()*(L-4),{y:-6,static:true,yaw:Math.random()<.5?0:Math.PI,crouch:Math.random()<.3}));
-  if(k===1||k===nc-1&&host.length<(c.hostage||1)){if(host.length<(c.hostage||1)){const h=spawnHostage(-5.9,ze+L*.5,Math.PI/2);h.pos.y=-6;h.m.root.position.y=-6;host.push(h);}}
-  spawnDummy(-6.6,ze+3,false,Math.PI/2,-6);cars.push(ce);}
- const plat=[];for(let i=0;i<(c.plat||5);i++){const z=rand(-80,10);plat.push(spawnEnemy(rand(5.8,9),z,{y:-6,leash:12,crouch:Math.random()<.5,yaw:rand(-3,3)}));}
+ for(let z=-24;z<=15;z+=13)addBox(5,-6,z,.8,5.5,.8,0xc8ccc8);for(let z=-20;z<=10;z+=15){const b=box(2,.45,.5,0x6a4a2a);b.position.set(8,-5.75,z);W.group.add(b);}
+ for(let x=-3;x<=9;x+=2.4)addBox(x,-6,19.5,.25,1,1.2,0x5a5e62);const ps=labelSprite('PERON 1 · TREN TÜNELDE DURDU',1);ps.position.set(3,-2.2,15);W.group.add(ps);
+ lampLight(3,-1.3,-10,0xf0f4ff,1.2,26);lampLight(3,-1.3,12,0xf0f4ff,1.0,22);
+ // tunnel: rails, sleepers, cable trays, dim lights, exit signs
+ [-6.47,-5.03].forEach(x=>{const r=box(.08,.12,lenZ,0x8a8e90);r.position.set(x,-6.94,midZ);r.castShadow=false;W.group.add(r);});
+ for(let z=PZ0+3;z<30;z+=1.2){const sl=box(2.4,.08,.25,0x4a4038);sl.position.set(TX,-6.96,z);sl.castShadow=false;W.group.add(sl);}
+ [-9.95,-1.55].forEach(x=>{const ct=box(.15,.08,(-32)-PZ0,0x2a2c2e);ct.position.set(x,-3.2,(PZ0-32)/2);W.group.add(ct);});
+ for(let z=-50;z>PZ0+8;z-=40){lampLight(-9.4,-2.6,z,0xbcd0ff,.9,20);const es=labelSprite('ACİL ÇIKIŞ →',.5);es.position.set(-9.6,-3.6,z+3);W.group.add(es);}
+ // ---- train
+ const silver=new THREE.MeshPhongMaterial({color:0xc4c8cc,shininess:60,specular:0x888888}),roofM=new THREE.MeshPhongMaterial({color:0xb0b4b8,shininess:30,side:THREE.DoubleSide}),glassT=new THREE.MeshPhongMaterial({color:0x223040,transparent:true,opacity:.42,shininess:90,specular:0x9ab0c0,side:THREE.DoubleSide,depthWrite:false});
+ const seatM=lam(0x2a5aa0),poleM=lam(0xd8dce0),adCols=[0xd04040,0x40a060,0xe0b030,0x3070c0,0x8a4ab0];
+ const ledTex=textTex('SONRAKİ İSTASYON: MERKEZ',512,48,'bold 30px monospace','#ff9a20','#0a0a0a');
+ const cars=[],host=[];
+ const sideWall=(x,ze,zs,out)=>{const gaps=[[ze+4-.7,ze+4+.7],[ze+12-.7,ze+12+.7]];const segs=[];let cur=ze;gaps.forEach(([a,b])=>{segs.push([cur,a]);cur=b;});segs.push([cur,zs]);
+  segs.forEach(([a,b])=>{const zc=(a+b)/2,l=b-a;addBox(x,FY,zc,.1,.9,l,silver);addBox(x,-4.05,zc,.1,.5,l,silver);const gw=box(.04,.85,l-.1,0);gw.material=glassT;gw.position.set(x,-4.475,zc);gw.castShadow=false;W.group.add(gw);
+   for(let z=a+1.2;z<b-.4;z+=1.4){const pl=box(.11,.85,.08,silver);pl.position.set(x,-4.475,z);W.group.add(pl);}
+   const st=box(.03,.16,l,0xc81e2e);st.position.set(x+out*.055,-5.0,zc);st.castShadow=false;W.group.add(st);
+   const ad=box(.02,.28,l-.2,pick(adCols));ad.position.set(x-out*.055,-3.8,zc);ad.castShadow=false;W.group.add(ad);});
+  gaps.forEach(([a,b])=>{const zc=(a+b)/2;addBox(x,-3.8,zc,.1,.25,1.4,silver);const led=new THREE.Mesh(new THREE.PlaneGeometry(1.1,.12),new THREE.MeshBasicMaterial({map:ledTex}));led.position.set(x-out*.06,-3.7,zc);led.rotation.y=out>0?-Math.PI/2:Math.PI/2;W.group.add(led);
+   const leaves=[];[-1,1].forEach(k=>{const lf=new THREE.Group();const p=box(.06,2.0,.7,silver);lf.add(p);const w=box(.065,.75,.45,0);w.material=glassT;w.position.y=.45;lf.add(w);const rs=box(.07,.1,.7,0x222222);rs.position.y=-.2;lf.add(rs);lf.position.set(x,FY+1.0,zc+k*.35);lf.userData.k=k;lf.userData.z0=zc+k*.35;W.group.add(lf);leaves.push(lf);});
+   const col=addCollider(x-.06,FY,zc-.7,x+.06,FY+2.0,zc+.7,'tdoor');const d={leaves,c:col,x,zc,out,open:false,pry:0,stepPoint:V3(x+out*1.05,-7,zc),inPoint:V3(x-out*.85,FY,zc),stepAlly:null,ready:false,climbed:false};TDOORS.push(d);
+   const it={pos:V3(x+out*.7,-7,zc),label:'',range:2.2,done:false,act(){doorAct(d);}};d.it=it;W.interact.push(it);});};
+ for(let k=0;k<nc;k++){const zs=Z0-k*(L+gap),ze=zs-L,zc=(zs+ze)/2;
+  addBox(TX,-6.25,zc,2.9,.45,L,0x6a6e72);const uf=box(2.4,.3,L-1,0x2a2c2e);uf.position.set(TX,-6.42,zc);W.group.add(uf);
+  [ze+2.6,zs-2.6].forEach(bz=>{const fr=box(2.3,.3,2.4,0x1e2022);fr.position.set(TX,-6.6,bz);W.group.add(fr);[-.9,.9].forEach(dz=>[-.72,.72].forEach(dx=>{const wh=cyl(.38,.38,.12,0x3a3c3e,14);wh.rotation.z=Math.PI/2;wh.position.set(TX+dx,-6.62,bz+dz);W.group.add(wh);}));});
+  sideWall(TX-1.45,ze,zs,-1);sideWall(TX+1.45,ze,zs,1);
+  const rg=new THREE.CylinderGeometry(1.5,1.5,L,18,1,true,Math.PI/2,Math.PI);rg.rotateX(Math.PI/2);rg.scale(1,.3,1);const roof=new THREE.Mesh(rg,roofM);roof.position.set(TX,TOP,zc);roof.castShadow=true;W.group.add(roof);
+  const lightM=new THREE.MeshBasicMaterial({color:0xf2f6ff});[-.55,.55].forEach(dx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.18,.03,L-1),lightM);l.position.set(TX+dx,TOP+.12,zc);W.group.add(l);});
+  const ends=k===0?[[zs,true],[ze,false]]:[[zs,false],[ze,false]];
+  ends.forEach(([zz,cab])=>{if(cab){wallSeg(TX-1.45,zz,TX+1.45,zz,FY,2.25,.12,0xc4c8cc);const nose=box(2.9,1.6,.9,silver);nose.position.set(TX,FY+.8,zz+.45);W.group.add(nose);const ws=box(2.6,.8,.05,0);ws.material=glassT;ws.position.set(TX,FY+1.75,zz+.62);ws.rotation.x=-.25;W.group.add(ws);
+    [-1,1].forEach(s=>{const hl=new THREE.Mesh(new THREE.CircleGeometry(.12,12),new THREE.MeshBasicMaterial({color:0xfff6d0}));hl.position.set(TX+s*1.0,FY+.4,zz+.91);W.group.add(hl);});const num=labelSprite('HAT M7 · 3417',.5);num.position.set(TX,FY+2.3,zz+.9);W.group.add(num);}
+   else{wallSeg(TX-1.45,zz,TX+1.45,zz,FY,2.25,.12,0xc4c8cc,[{at:1.45,w:1.1}]);makeDoor(TX,FY,zz,'x',1.06,false);}});
+  if(k<nc-1){addBox(TX,-6.25,ze-gap/2,1.4,.45,gap,0x4a4e52);[-.78,.78].forEach(dx=>{addBox(TX+dx,FY,ze-gap/2,.1,2.1,gap,0x1a1a1a);for(let i=0;i<4;i++){const rb=box(.14,2.1,.04,0x2a2a2a);rb.position.set(TX+dx,FY+1.05,ze-gap*(i+1)/5);W.group.add(rb);}});const bt=box(1.66,.1,gap,0x1a1a1a);bt.position.set(TX,FY+2.15,ze-gap/2);W.group.add(bt);}
+  // interior: seats, poles, rails, straps
+  [[ze+.6,ze+3.2],[ze+4.8,ze+11.2],[ze+12.8,zs-.6]].forEach(([a,b])=>{[-1,1].forEach(s=>{const sb=box(.45,.12,b-a,seatM);sb.position.set(TX+s*1.15,FY+.42,(a+b)/2);W.group.add(sb);const bk=box(.08,.5,b-a,seatM);bk.position.set(TX+s*1.36,FY+.72,(a+b)/2);W.group.add(bk);const lg=box(.4,.36,b-a,0x8a8e92);lg.position.set(TX+s*1.15,FY+.18,(a+b)/2);W.group.add(lg);});});
+  [ze+4,ze+12].forEach(z=>[-.35,.35].forEach(dx=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,2.25,6),poleM);p.position.set(TX+dx,FY+1.12,z);W.group.add(p);}));
+  [-.6,.6].forEach(dx=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,L-.6,6),poleM);r.rotation.x=Math.PI/2;r.position.set(TX+dx,TOP-.05,zc);W.group.add(r);for(let z=ze+1;z<zs-.5;z+=.8){const sp=box(.03,.22,.03,0x333333);sp.position.set(TX+dx,TOP-.18,z);W.group.add(sp);const hd=new THREE.Mesh(new THREE.TorusGeometry(.05,.012,5,10),poleM);hd.position.set(TX+dx,TOP-.32,z);W.group.add(hd);}});
+  const cn=textTex(String(3417+k),128,40,'bold 30px Arial','#222',null);[-1,1].forEach(s=>{const t=new THREE.Mesh(new THREE.PlaneGeometry(.6,.18),new THREE.MeshBasicMaterial({map:cn,transparent:true}));t.position.set(TX+s*1.51,FY+.55,ze+1.2);t.rotation.y=s*Math.PI/2;W.group.add(t);});
+  const ce=[];const ne=(c.per||2)+(k%2);for(let i=0;i<ne;i++)ce.push(spawnEnemy(TX+rand(-.45,.45),ze+2+Math.random()*(L-4),{y:FY,static:true,yaw:Math.random()<.5?0:Math.PI,crouch:Math.random()<.3}));
+  if((k===1||k===nc-1)&&host.length<(c.hostage||1)){const h=spawnHostage(TX-.2,ze+L*.5,Math.PI/2);h.pos.y=FY;h.m.root.position.y=FY;host.push(h);}
+  spawnDummy(TX-1.1,ze+3,false,Math.PI/2,FY);cars.push(ce);}
+ const plat=[];for(let i=0;i<(c.plat||4);i++)plat.push(spawnEnemy(rand(5.8,9),rand(-26,10),{y:-6,leash:12,crouch:Math.random()<.5,yaw:rand(-3,3)}));
  plat.push(spawnEnemy(4,16,{y:-6,static:true,yaw:0}),spawnEnemy(7,14,{y:-6,static:true,yaw:.3,gun:'pkm'}));
+ const tun=[spawnEnemy(-8.8,Z0+8,{y:-7,yaw:0,crouch:true,leash:6}),spawnEnemy(-2.6,Z0+4,{y:-7,yaw:0,leash:6})];
  const street=[spawnEnemy(-6,40,{yaw:Math.PI}),spawnEnemy(12,44,{yaw:Math.PI})];
  for(let i=0;i<4;i++)blockBuilding(i%2?-30:34,-20+i*40,20,24,rand(10,22),pick([0xe8dcc8,0xd8d0c8,0xd0d8e0]));[[-8,60,0],[14,70,0]].forEach(([x,z,r])=>parkedCar(x,z,r,pick([0x2a2d31,0x8a8e92,0x7a2a22])));
  lampLight(-2,5,45,0xffd8a0,1,20);
- const SQ=squadDefs([{call:'Bora',n:4,delay:12,road:[V3(6,-6,-86)]}].concat(c.squads||[]),20);
+ const SQ=squadDefs([{call:'Bora',n:4,delay:14,road:[V3(TX+3.5,-7,PZ0+6)]}].concat(c.squads||[]),20);
  const drop=V3(4,0,44);ammoCrate(8,44);const exitP=V3(4,0,38);
- const obj=[enemyObj('Metro girişindeki militanları etkisiz hale getir',street,V3(4,0,36)),enemyObj('Merdivenlerden in, peronu temizle',plat,V3(5,-6,0))];
- cars.forEach((ce,k)=>obj.push(enemyObj(`${k+1}. vagonu temizle`,ce,V3(-5.6,-6,18-k*(L+gap)-L/2))));host.forEach((h,i)=>obj.push(hostObj(h,i)));
+ const inTrain=()=>P.pos.y>FY-.2&&P.pos.x>TX-1.5&&P.pos.x<TX+1.5&&P.pos.z<Z0+.5;
+ const obj=[enemyObj('Metro girişindeki militanları etkisiz hale getir',street,V3(4,0,36)),enemyObj('Merdivenlerden in, peronu temizle',plat,V3(5,-6,0)),
+  {text:'Peron ucundan raylara in, tünelde trene ulaş',check:()=>P.pos.y<-6.5&&P.pos.z<Z0+6,pos:V3(-3,-7,Z0+4)},
+  {text:'Vagon kapısını hidrolik ayırıcıyla aç',check:()=>TDOORS.some(d=>d.open),pos:()=>{const d=TDOORS.find(d=>!d.open);return d?d.stepPoint:null;}},
+  {text:'Tim basamağıyla vagona tırman',check:()=>inTrain(),pos:()=>{const d=TDOORS.find(d=>d.open);return d?d.stepPoint:null;}}];
+ cars.forEach((ce,k)=>obj.push(enemyObj(`${k+1}. vagonu temizle`,ce,V3(TX,FY,Z0-k*(L+gap)-L/2))));host.forEach((h,i)=>obj.push(hostObj(h,i)));
  const exZ=zoneMarker(exitP.x,exitP.z,3);exZ.vis=false;obj.push({text:host.length?'Rehinelerle birlikte sokağa çık':'Sokağa çık',check:()=>{exZ.vis=true;return nearP(exitP,4)&&P.pos.y>-1&&W.hostages.every(h=>h.dead||h.pos.distanceTo(exitP)<14);},pos:exitP});
  return{spawn:drop.clone(),firstLook:V3(4,0,30),lz:drop,approach:V3(0,0,1),extraction:drop,road:[V3(4,0,160),V3(4,0,90),V3(4,0,50)],
-  intro:introFor(def,`İstasyonda ${nc} vagonlu bir tren rehin alındı. Hep birlikte merdivenlerden inip peronu ve vagonları tek tek temizleyeceğiz. Bora Timi diğer girişten giriyor.`),obj,SQ,update(dt){updateSquads(SQ,dt);}};}
+  intro:introFor(def,`Tren ${nc} vagonla tünelde durduruldu, kapılar kilitli. Peronu temizleyip raylara inin; kapıları hidrolik ayırıcıyla açın. Vagon yüksek, basamak yok — tim basamağıyla çıkacağız. Bora Timi tünelin öbür ucundan geliyor.`),obj,SQ,
+  update(dt){updateSquads(SQ,dt);updateTrainDoors(dt);}};}
+function doorAct(d){if(!d.open){if(W.pry)return;W.pry=d;toolVM();radio('Kartal-1','Hidrolik ayırıcı! Kapıyı zorluyorum, kollayın!',2.5);return;}
+ if(!d.stepAlly){const mates=W.allies.filter(a=>!a.downed&&!a.squad&&!a.stepping);if(!mates.length){feed('Basamak olacak tim arkadaşı yok');return;}const a=mates.find(m=>m.role!=='shield')||mates[0];d.stepAlly=a;a.stepping=d;radio('Kartal-1',`${a.name}, basamak ol!`,2);setTimeout(()=>radio(a.name,'Yatıyorum, sırtıma basın!',2.5),700);return;}
+ if(d.ready&&!P.climb){P.climb={t:0,from:P.pos.clone(),mid:d.stepPoint.clone().add(V3(0,.45,0)),to:d.inPoint.clone()};d.climbed=true;d.climbT=0;radio('Kartal-1','Çıkıyorum!',1.5);}}
+function updateTrainDoors(dt){const d=W.pry;
+ if(d){const near=Math.hypot(P.pos.x-d.it.pos.x,P.pos.z-d.it.pos.z)<2.4&&!P.downed;if(!near){W.pry=null;buildVM();feed('Kapı zorlama yarıda kaldı');}
+  else{d.pry+=dt/2.8;centerMsg('HİDROLİK AYIRICI',Math.round(Math.min(1,d.pry)*100)+'%',.3);if(VM.jaws)VM.jaws.forEach((j,i)=>j.position.x=(i?1:-1)*(.02+d.pry*.05));if(Math.random()<.3)noiseHit(260,.25,.12,'lowpass');
+   d.leaves.forEach(l=>l.position.z=l.userData.z0+l.userData.k*Math.min(1,d.pry)*.12);
+   if(d.pry>=1){d.open=true;d.c.active=false;W.pry=null;buildVM();sndThud();radio('Kartal-1','Kapı açıldı! Basamak lazım, vagon yüksek!',3);feed('Kapı açıldı — [E] tim arkadaşın basamak olsun','#62d68f');}}}
+ for(const t of TDOORS){if(t.open)t.leaves.forEach(l=>{l.position.z+=(l.userData.z0+l.userData.k*.68-l.position.z)*Math.min(1,dt*6);});
+  const it=t.it;const inside=P.pos.y>-6.2;it.done=inside||(t.open&&t.stepAlly&&!t.ready)||(t.climbed&&t.ready&&P.climb);
+  it.label=!t.open?'[E] Hidrolik ayırıcıyla kapıyı zorla':!t.stepAlly?'[E] Tim arkadaşın basamak olsun (yere yatar)':t.ready?'[E] Arkadaşının sırtına basarak tırman':'';
+  const a=t.stepAlly;if(a){if(!t.ready&&a.pos.distanceTo(t.stepPoint)<.7){t.ready=true;a.prone=true;a.proneYaw=Math.atan2(0,1);const m=a.m;setCrouch(a,false);m.body.rotation.x=Math.PI/2;m.body.position.set(0,.18,-.9);m.up.rotation.set(0,0,0);a.pos.copy(t.stepPoint);a.pos.z+=.0;if(m.gun)m.gun.visible=false;feed(a.name+' basamak oldu — [E] ile tırman','#62d68f');}
+   if(t.climbed){t.climbT+=dt;const others=W.allies.filter(o=>o!==a&&!o.downed&&!o.squad);const allUp=others.every(o=>o.pos.y>-6.2);
+    if((allUp&&t.climbT>2)||t.climbT>12){const m=a.m;a.prone=false;a.stepping=null;m.body.rotation.x=0;m.body.position.set(0,0,0);if(m.gun)m.gun.visible=true;a.lift={t:0,from:a.pos.clone(),to:t.inPoint.clone().add(V3(0,0,.6))};t.stepAlly=null;t.ready=false;t.climbed=false;radio(a.name,'Beni de çekin!',2);setTimeout(()=>radio('Kartal-3','Tuttum seni, yukarı!',2),600);}}}}}
 // ---- mission catalogue
 const GEN=[
  ['koy','Karakaya Köyü Baskını','Köy',101,'sabah','kirpi',genVillage,{houses:10,hvt:1},'On evlik köyde bomba ustası saklanıyor. Evleri tek tek bas.'],
@@ -2521,6 +2576,6 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.
 (function boot(){const s=store.get('sel',null);if(s){if(WEAPONS[s.primary]&&WEAPONS[s.primary].cat!=='PST')G.sel.primary=s.primary;if(WEAPONS[s.secondary]&&WEAPONS[s.secondary].cat==='PST')G.sel.secondary=s.secondary;if(DIFF[s.diff])G.sel.diff=s.diff;}
  clearWorld();buildMenuWorld();applyQuality();G.state='menu';showScreen('menu');$('loading').remove();loop();
  if(matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches){const n=document.querySelector('#scrMenu .note');n.innerHTML+='<br><b style="color:var(--warn)">Bu oyun klavye ve fare ister; telefonda oynanamaz.</b>';}
- window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer,rayWorld,los,AIR};
+ window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer,rayWorld,los,AIR,TDOORS};
 })();
 </script>
