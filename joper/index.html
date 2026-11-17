@@ -1205,12 +1205,36 @@ function buildHeli(){
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
  return{g,rotor,tr,disc};}
 
+TEX.rope=canvasTex(8,64,(x,w,h)=>{for(let i=0;i<8;i++){x.fillStyle=i%2?'#3a3022':'#6a5a3e';x.fillRect(0,i*8,w,8);}});TEX.rope.wrapS=TEX.rope.wrapT=THREE.RepeatWrapping;TEX.rope.repeat.set(1,40);
+function heliInterior(h){
+ const g=new THREE.Group();h.g.add(g);const wall=0xa8acae,floorC=0x4d5154;
+ const pl=(w,hh,col,x,y,z,ry,rx,map)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,hh),new THREE.MeshPhongMaterial({color:col,side:THREE.DoubleSide,shininess:10,map:map||null}));m.position.set(x,y,z);if(ry)m.rotation.y=ry;if(rx)m.rotation.x=rx;g.add(m);return m;};
+ const z0=-2.5,z1=2.1,L=z1-z0,zc=(z0+z1)/2;
+ pl(2.1,L,floorC,0,.68,zc,0,-Math.PI/2);pl(2.1,L,0xb8bcbe,0,2.5,zc,0,Math.PI/2);pl(L,1.82,wall,-1.05,1.59,zc,Math.PI/2);
+ pl(-.45-z0,1.82,wall,1.05,1.59,(z0-.45)/2,-Math.PI/2);pl(z1-1.25,1.82,wall,1.05,1.59,(z1+1.25)/2,-Math.PI/2);pl(1.7,.3,wall,1.05,2.35,.4,-Math.PI/2);
+ pl(2.1,1.82,0x9a9ea0,0,1.59,z0,0);pl(.6,1.82,wall,-.75,1.59,z1,Math.PI);pl(.6,1.82,wall,.75,1.59,z1,Math.PI);pl(.9,.6,wall,0,2.2,z1,Math.PI);
+ for(let z=z0+.3;z<z1;z+=.55){[-1,1].forEach(sx=>{if(sx>0&&z>-.55&&z<1.35)return;const r=box(.05,1.8,.07,0x8e9294);r.position.set(sx*1.02,1.59,z);g.add(r);});const cr=box(2.05,.05,.07,0x8e9294);cr.position.set(0,2.46,z);g.add(cr);}
+ [-.6,-.2,.2,.6].forEach(x=>{const r=box(.06,.02,L,0x6a6e70);r.position.set(x,.69,zc);g.add(r);});
+ for(let z=z0+.25;z<z1;z+=.45)[-.6,-.2,.2,.6].forEach(x=>{const k=cyl(.028,.028,.025,0xb8bcbe,8);k.position.set(x,.705,z);g.add(k);});
+ const seat=(x,z,sx)=>{const sb=box(.42,.05,.42,0x26282c);sb.position.set(x,1.12,z);g.add(sb);const bk=box(.03,.55,.4,0x8a1d22);bk.position.set(x+sx*.21,1.45,z);g.add(bk);
+  for(let i=0;i<4;i++){const st=box(.035,.02,.4,0x161616);st.position.set(x+sx*.195,1.24+i*.13,z);g.add(st);}const lg=box(.03,.43,.03,0x555555);lg.position.set(x,.9,z+.15);g.add(lg);};
+ for(let z=-2.2;z<1.7;z+=.55)seat(-.78,z,-1);for(let z=-2.2;z<-.6;z+=.55)seat(.78,z,1);
+ [[-1.03,1.95,-1.2,Math.PI/2,0x2a6a3a,.3,.45],[-1.03,1.95,.9,Math.PI/2,0x2a6a3a,.3,.45],[1.03,1.9,-1.6,-Math.PI/2,0x2a6a3a,.3,.45],[-1.03,1.75,.1,Math.PI/2,0xd8c030,.18,.1],[1.03,1.75,1.7,-Math.PI/2,0xd8c030,.18,.1],[-1.03,2.05,1.6,Math.PI/2,0x30343a,.4,.25]].forEach(([x,y,z,ry,c,w,hh])=>pl(w,hh,c,x,y,z,ry));
+ pl(.6,.4,0xffffff,-1.02,2.15,1.25,Math.PI/2,0,TEX.flag);pl(.6,.4,0xffffff,1.02,2.15,1.75,-Math.PI/2,0,TEX.flag);
+ for(let z=z0+.5;z<z1;z+=1.1)[-.45,.45].forEach(x=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.28,.02,.13),new THREE.MeshBasicMaterial({color:0xf4f6ff}));l.position.set(x,2.48,z);g.add(l);});
+ [[.55,1.6],[.55,1.0]].forEach(([x,z])=>{const c=box(.55,.45,.5,0xcdb48a);c.position.set(x,.92,z);g.add(c);});
+ const lt=new THREE.PointLight(0xf0f4ff,.9,7,2);lt.position.set(0,2.3,-.2);g.add(lt);
+ const gd=WEAPONS.find(w=>w.name==='MKE MPT-76');
+ [[-.72,-1.65],[-.72,-1.1],[-.72,-.55],[-.72,0],[-.72,.55],[.72,-1.65],[.72,-1.1]].forEach(([x,z],i)=>{const m=makeHuman(Object.assign({},UNI.ally,{gunDef:gd}));m.root.position.set(x,.62,z);m.root.rotation.y=x<0?Math.PI/2:-Math.PI/2;
+  m.hips.position.y=.55;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;m.armL.rotation.z=-.2;m.up.rotation.x=.05;g.add(m.root);});
+ g.traverse(o=>{if(o.isMesh)o.castShadow=false;});return g;}
+function ropeHands(){const mk=()=>{const g=new THREE.Group();const gl=box(.075,.08,.06,0x0b0b0c);gl.position.z=.04;g.add(gl);for(let f=0;f<4;f++){const fg=box(.016,.019,.07,0x111113);fg.position.set(-.028+f*.019,.03-f*.006,-.02);g.add(fg);}const sl=box(.07,.07,.32,0x15171a);sl.position.z=.23;g.add(sl);const th=box(.022,.03,.05,0x0b0b0c);th.position.set(.045,.0,-.01);g.add(th);g.traverse(o=>{if(o.isMesh)o.castShadow=false;});W.group.add(g);return g;};return[mk(),mk()];}
 // ================= CINEMATIC INSERTION =================
 let CINE=null;
 function startCine(m,veh){
  G.state='cine';document.body.classList.add('cine');initAudio();$('hud').hidden=true;
  const lz=m.lz.clone();const app=m.approach||V3(0,0,1);
- if(veh==='heli'){const h=buildHeli();W.group.add(h.g);W.heliObj=h;const gy=terrainH(lz.x,lz.z);
+ if(veh==='heli'){const h=buildHeli();W.group.add(h.g);W.heliObj=h;heliInterior(h);const gy=terrainH(lz.x,lz.z);
   const start=V3(lz.x+app.x*260,gy+90,lz.z+app.z*260);const hover=V3(lz.x,gy+15,lz.z);
   CINE={type:'heli',h,start,hover,t:0,dur:15,lz,gy};loopStart('rotor','rotor');loopVol('rotor',1);
   radio('Pilot','Kartal Timi, hedef bölgeye iki dakika. Hazırlanın.',4);
@@ -1229,10 +1253,14 @@ function updateCine(dt){const C=CINE;if(!C)return;C.t+=dt;const t=C.t;
   let pos,yaw;const flyT=9;if(t<flyT){const k=t/flyT;const e=1-Math.pow(1-k,2.2);pos=C.start.clone().lerp(C.hover,e);pos.y+=Math.sin(k*Math.PI)*8;}else{pos=C.hover.clone();pos.x+=Math.sin(t*1.3)*.25;pos.y+=Math.sin(t*.9)*.3;}
   yaw=Math.atan2(C.hover.x-C.start.x,C.hover.z-C.start.z);h.g.position.copy(pos);h.g.rotation.set(t<flyT?.12*(1-t/flyT)+.04:Math.sin(t)*.02,yaw,Math.sin(t*.7)*.03);
   h.g.updateMatrixWorld(true);
-  let cam;if(t<flyT+1.5){cam=V3(.8,2.3,.7).applyMatrix4(h.g.matrixWorld);const look=V3(6,1.0,2.5).applyMatrix4(h.g.matrixWorld);camera.position.copy(cam);camera.lookAt(look);G.shake=Math.max(G.shake,.06+(t>flyT-1.5&&t<flyT+.5?.2:0));}
-  else{const k=clamp((t-flyT-1.5)/3,0,1);const top=V3(1.6,1.4,.6).applyMatrix4(h.g.matrixWorld);const bottom=V3(top.x,C.gy+1.66,top.z);cam=top.clone().lerp(bottom,k*k);camera.position.copy(cam);
-   camera.lookAt(V3(cam.x+Math.sin(yaw+Math.PI/2)*5,cam.y-2-k*2,cam.z+Math.cos(yaw+Math.PI/2)*5));G.shake=Math.max(G.shake,.18*(1-k)+.05);
-   if(!C.rope){C.rope=true;const r=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,15,6),lam(0x2a2418));r.position.set(top.x+.1,C.gy+7.5,top.z+.1);W.group.add(r);C.ropeM=r;radio('Kartal-1','Halattan iniş! Git git git!',2.5);}
+  let cam;if(t<flyT+1.5){const inside=t<6.5;cam=(inside?V3(0,1.95,-2.38):V3(.35,1.78,.35)).applyMatrix4(h.g.matrixWorld);const look=(inside?V3(0,1.55,2.0):V3(6,1.0,.6)).applyMatrix4(h.g.matrixWorld);camera.position.copy(cam);camera.lookAt(look);G.shake=Math.max(G.shake,.05+(t>flyT-1.5&&t<flyT+.5?.18:0));
+   if(t>6.4&&!C.saidDoor){C.saidDoor=1;radio('Kartal-2','Kapı açık! Halat hazır!',2.5);}}
+  else{const k=clamp((t-flyT-1.5)/3.2,0,1);const dR=V3(Math.cos(yaw),0,-Math.sin(yaw));const anchor=V3(1.55,1.4,.4).applyMatrix4(h.g.matrixWorld);
+   if(!C.rope){C.rope=true;const top=anchor.clone();const len=top.y-C.gy+.2;const r=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,len,8),new THREE.MeshPhongMaterial({map:TEX.rope,shininess:2}));r.position.set(top.x,top.y-len/2,top.z);W.group.add(r);C.ropeM=r;C.ropeX=top.x;C.ropeZ=top.z;C.ropeTop=top.y;C.hands=ropeHands();radio('Kartal-1','Halattan iniş! Git git git!',2.5);}
+   const ease=k<.15?k*k/.3:k-.075;const ey=lerp(C.ropeTop+.2,C.gy+1.66,clamp(ease/0.925,0,1));
+   cam=V3(C.ropeX-dR.x*.42,ey,C.ropeZ-dR.z*.42);camera.position.copy(cam);camera.lookAt(V3(C.ropeX+dR.x*2.2,ey-1.25,C.ropeZ+dR.z*2.2));
+   const jit=k<1?rand(-.006,.006):0;C.hands.forEach((hd,i)=>{hd.position.set(C.ropeX-dR.x*.045+jit,ey-(i?.42:.14)+jit,C.ropeZ-dR.z*.045);hd.lookAt(cam.x+dR.z*(i?.25:-.25),ey-.7,cam.z-dR.x*(i?.25:-.25));});
+   G.shake=Math.max(G.shake,.06*(1-k)+.02);if(k<1&&Math.random()<.3)noiseHit(900,.08,.04,'bandpass',2);
    if(k>=1&&!C.landed){C.landed=true;G.shake=.45;sndThud();burst(V3(cam.x,C.gy+.1,cam.z),10,'dust');}}
   // rotor wash dust
   if(t>flyT-2&&Math.random()<.7){const a=Math.random()*Math.PI*2,r=rand(3,11);burst(V3(C.lz.x+Math.cos(a)*r,C.gy+.2,C.lz.z+Math.sin(a)*r),1,'dust');}
@@ -1254,7 +1282,7 @@ function updateCine(dt){const C=CINE;if(!C)return;C.t+=dt;const t=C.t;
 }
 function skipCine(){if(!CINE)return;CINE.t=CINE.dur;CINE.landed=true;updateCine(0);}
 function endCine(){const C=CINE;CINE=null;document.body.classList.remove('cine');
- if(C.type==='heli'){if(C.ropeM)W.group.remove(C.ropeM);const gy=C.gy;P.pos.set(C.lz.x+1.5,gy,C.lz.z);W.heliLeave={t:0,from:C.h.g.position.clone(),yaw:C.h.g.rotation.y};}
+ if(C.type==='heli'){if(C.ropeM)W.group.remove(C.ropeM);if(C.hands)C.hands.forEach(hd=>W.group.remove(hd));const gy=C.gy;P.pos.set(C.lz.x+1.5,gy,C.lz.z);W.heliLeave={t:0,from:C.h.g.position.clone(),yaw:C.h.g.rotation.y};}
  else{const v=C.v;v.g.updateMatrixWorld(true);const b=V3(0,0,-v.L/2-1.8).applyMatrix4(v.g.matrixWorld);P.pos.set(b.x,terrainH(b.x,b.z),b.z);P.yaw=v.g.rotation.y+Math.PI;
   // vehicle collider
   const bb=new THREE.Box3().setFromObject(v.g);bb.expandByScalar(-.15);W.colliders.push({box:bb,active:true,kind:'veh',ref:v.g});loopVol('engine',.15);}
@@ -1761,6 +1789,6 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.
 (function boot(){const s=store.get('sel',null);if(s){if(WEAPONS[s.primary]&&WEAPONS[s.primary].cat!=='PST')G.sel.primary=s.primary;if(WEAPONS[s.secondary]&&WEAPONS[s.secondary].cat==='PST')G.sel.secondary=s.secondary;if(DIFF[s.diff])G.sel.diff=s.diff;}
  clearWorld();buildMenuWorld();applyQuality();G.state='menu';showScreen('menu');$('loading').remove();loop();
  if(matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches){const n=document.querySelector('#scrMenu .note');n.innerHTML+='<br><b style="color:var(--warn)">Bu oyun klavye ve fare ister; telefonda oynanamaz.</b>';}
- window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS};
+ window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE};
 })();
 </script>
