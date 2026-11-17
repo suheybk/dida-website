@@ -1367,23 +1367,64 @@ function buildVehicle(type){
   [-1.8,1.9].forEach(z=>{addW(-.98,z,.42,.3);addW(.98,z,.42,.3);});jandText(g,2.05,1.45,-.3,2.0);}
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
  return{g,wheels,L,Wd,H,type};}
+function loftGeo(secs,n=36,a0=0,a1=Math.PI*2,ex=3,scale=1){const closed=(a1-a0)>=Math.PI*2-1e-6;const pts=[],idx=[];const cols=closed?n:n+1;
+ secs.forEach(([z,w,h,yc])=>{for(let i=0;i<cols;i++){const t=a0+(a1-a0)*i/n;const c=Math.cos(t),s=Math.sin(t);pts.push(Math.sign(c)*Math.pow(Math.abs(c),2/ex)*w/2*scale,yc+Math.sign(s)*Math.pow(Math.abs(s),2/ex)*h/2*scale,z);}});
+ for(let k=0;k<secs.length-1;k++)for(let i=0;i<(closed?n:n);i++){const i2=closed?(i+1)%n:i+1;const a=k*cols+i,b=k*cols+i2,c2=(k+1)*cols+i,d=(k+1)*cols+i2;idx.push(a,c2,b,b,c2,d);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));g.setIndex(idx);g.computeVertexNormals();return g;}
 function buildHeli(){
- const g=new THREE.Group();const c=0x2a2f2c;const glass=0x16222a;
- const body=box(2.3,2.0,6.2,c);body.position.set(0,1.6,0);g.add(body);const nose=box(2.0,1.5,1.6,c);nose.position.set(0,1.35,3.7);g.add(nose);
- const cock=box(1.9,.8,1.2,glass);cock.position.set(0,1.95,3.6);cock.rotation.x=-.4;g.add(cock);
- const top=box(1.4,.7,3.2,c);top.position.set(0,2.95,.3);g.add(top);const mast=cyl(.15,.15,.6,0x1a1a1a,8);mast.position.set(0,3.5,.3);g.add(mast);
- const boom=cyl(.35,.6,7.5,c,10);boom.rotation.x=Math.PI/2;boom.position.set(0,2.2,-6.6);g.add(boom);
- const fin=box(.15,2.0,1.2,c);fin.position.set(0,3.0,-10.1);fin.rotation.x=-.3;g.add(fin);const stab=box(3.2,.08,.8,c);stab.position.set(0,2.1,-9.9);g.add(stab);
- let rdoor=null;[1,-1].forEach(s=>{if(s<0){const door=box(.03,1.25,1.7,0x111416);door.position.set(s*1.16,1.55,.4);g.add(door);}else{const door=box(.03,1.25,1.7,0x2a2f2c);door.position.set(s*1.2,1.55,-1.3);g.add(door);rdoor=door;}const win=box(.03,.4,.5,glass);win.position.set(s*1.16,2.1,2.2);g.add(win);
-  const gear=cyl(.32,.32,.25,0x111111,10);gear.rotation.z=Math.PI/2;gear.position.set(s*1.4,.32,2.6);g.add(gear);const strut=box(.1,.5,.1,0x222222);strut.position.set(s*1.25,.6,2.6);g.add(strut);});
- const tw=cyl(.18,.18,.2,0x111111,8);tw.rotation.z=Math.PI/2;tw.position.set(0,.6,-9.5);g.add(tw);
- jandText(g,2.3,1.9,-1.6,2.6);
- const flag=new THREE.Mesh(new THREE.PlaneGeometry(.6,.4),new THREE.MeshPhongMaterial({shininess:4,specular:0x080808,map:TEX.flag,side:THREE.DoubleSide}));flag.position.set(1.17,2.4,-3);flag.rotation.y=Math.PI/2;g.add(flag);const f2=flag.clone();f2.position.x=-1.17;g.add(f2);
- const rotor=new THREE.Group();rotor.position.set(0,3.85,.3);for(let i=0;i<4;i++){const b=box(8,.05,.5,0x151515);b.position.x=4;const arm=new THREE.Group();arm.rotation.y=i*Math.PI/2;arm.add(b);rotor.add(arm);}g.add(rotor);
- const disc=new THREE.Mesh(new THREE.CircleGeometry(8,32),new THREE.MeshBasicMaterial({color:0x111111,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));disc.rotation.x=-Math.PI/2;disc.position.y=3.86;disc.position.z=.3;g.add(disc);
- const tr=new THREE.Group();tr.position.set(.25,3.0,-10.2);for(let i=0;i<4;i++){const b=box(.03,1.6,.15,0x151515);b.rotation.x=i*Math.PI/4*2;tr.add(b);}g.add(tr);
- g.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
- return{g,rotor,tr,disc,door:rdoor};}
+ const g=new THREE.Group();const paint=new THREE.MeshPhongMaterial({color:0x24282b,shininess:28,specular:0x2a2a2a,side:THREE.DoubleSide});const dark=lam(0x15181a);
+ const glass=new THREE.MeshPhongMaterial({color:0x1b2a34,shininess:90,specular:0x8899aa,side:THREE.DoubleSide});const ex=0x8c7756;
+ const S=[[4.75,.15,.25,1.22],[4.55,.75,.62,1.25],[4.2,1.3,1.08,1.33],[3.6,1.85,1.55,1.47],[2.8,2.2,1.88,1.58],[1.9,2.36,2.0,1.62],[-1.3,2.42,2.02,1.63],[-2.5,2.2,1.82,1.73],[-3.5,1.4,1.2,1.98],[-4.5,.82,.82,2.22],[-8.8,.46,.56,2.45],[-9.7,.36,.5,2.5]];
+ const hull=new THREE.Mesh(loftGeo(S,40,0,Math.PI*2,3.2),paint);hull.castShadow=true;g.add(hull);
+ // nose cap & tail cap
+ const nc=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),paint);nc.position.set(0,1.22,4.75);g.add(nc);
+ // canopy glass: side strips + windshield + chin windows
+ const cs=S.slice(1,5).map(([z,w,h,yc])=>[z,w,h,yc]);
+ [[0.22,0.95],[Math.PI-0.95,Math.PI-0.22]].forEach(([a,b])=>{const m=new THREE.Mesh(loftGeo(cs,10,a,b,3.2,1.012),glass);g.add(m);});
+ const ws=new THREE.Mesh(loftGeo(S.slice(1,4),10,1.05,Math.PI-1.05,3.2,1.012),glass);g.add(ws);
+ [[-.82,-.2],[-Math.PI+.2,-Math.PI+.82]].forEach(([a,b])=>{const m=new THREE.Mesh(loftGeo(S.slice(1,3),6,a,b,3.2,1.012),glass);g.add(m);});
+ const frame=box(.05,.75,.05,0x111315);frame.position.set(0,1.95,3.75);frame.rotation.x=-.75;g.add(frame);
+ // cabin windows (left side fixed, right side on sliding door), gunner windows
+ [-1,1].forEach(sx=>{[[1.55,.55],[-2.1,.45]].forEach(([z,w])=>{const p=box(.02,.5,w,0x1b2a34);p.material=glass;p.position.set(sx*1.215,2.0,z);g.add(p);});});
+ const lw=[[-.25],[.55]];lw.forEach(([z])=>{const p=box(.02,.48,.5,0);p.material=glass;p.position.set(-1.215,1.98,z);g.add(p);});
+ // sliding door (right)
+ const door=new THREE.Group();const dp=box(.04,1.3,1.75,0x24282b);dp.material=paint;door.add(dp);[[-.42],[.42]].forEach(([z])=>{const w=box(.03,.48,.6,0);w.material=glass;w.position.set(.012,.32,z);door.add(w);});
+ const hd=box(.03,.05,.18,0x111111);hd.position.set(.03,0,-.75);door.add(hd);door.position.set(1.25,1.55,-1.3);g.add(door);
+ [2.18,.93].forEach(y=>{const r=box(.04,.04,3.6,0x1a1d20);r.position.set(1.24,y,-.6);g.add(r);});
+ const ldoor=box(.03,1.3,1.75,0);ldoor.material=paint;ldoor.position.set(-1.235,1.55,.35);g.add(ldoor);const lseam=box(.035,1.32,.02,0x111111);lseam.position.set(-1.24,1.55,-.52);g.add(lseam);
+ // upper deck + engines
+ const deck=new THREE.Mesh(loftGeo([[1.6,.8,.3,2.62],[1.0,1.5,.55,2.75],[-1.6,1.6,.6,2.78],[-2.7,1.1,.45,2.62],[-3.4,.6,.3,2.45]],20,0,Math.PI*2,3),paint);deck.castShadow=true;g.add(deck);
+ [-1,1].forEach(sx=>{const en=new THREE.Mesh(new THREE.CylinderGeometry(.3,.33,2.3,14),paint);en.rotation.x=Math.PI/2;en.position.set(sx*.52,2.98,-.6);en.castShadow=true;g.add(en);
+  const inl=new THREE.Mesh(new THREE.CylinderGeometry(.24,.26,.06,14),dark);inl.rotation.x=Math.PI/2;inl.position.set(sx*.52,2.98,.56);g.add(inl);
+  const exh=new THREE.Mesh(new THREE.CylinderGeometry(.22,.27,.65,12),lam(ex));exh.rotation.x=Math.PI/2;exh.rotation.y=sx*.35;exh.position.set(sx*.68,3.0,-1.95);g.add(exh);
+  const exo=new THREE.Mesh(new THREE.CircleGeometry(.2,12),lam(0x1a1410));exo.position.set(sx*.8,3.0,-2.26);exo.rotation.y=Math.PI+sx*.35;g.add(exo);});
+ const fair=box(.5,.35,1.0,0);fair.material=paint;fair.position.set(0,3.08,.25);g.add(fair);
+ // rotor
+ const mast=cyl(.13,.16,.55,0x1a1a1a,10);mast.position.set(0,3.45,.15);g.add(mast);
+ const rotor=new THREE.Group();rotor.position.set(0,3.78,.15);const hub=cyl(.32,.3,.22,0x1a1c1e,12);rotor.add(hub);const cap=cyl(.12,.2,.25,0x1a1c1e,10);cap.position.y=.2;rotor.add(cap);
+ for(let i=0;i<4;i++){const arm=new THREE.Group();arm.rotation.y=i*Math.PI/2;const bl=box(7.6,.05,.53,0x161718);bl.position.set(4.2,-.02,0);bl.rotation.z=-.012;arm.add(bl);const tip=box(.4,.052,.53,0x8a8a8a);tip.position.set(7.9,-.11,0);arm.add(tip);const cuff=box(.6,.12,.2,0x222222);cuff.position.set(.55,0,0);arm.add(cuff);rotor.add(arm);}g.add(rotor);
+ const disc=new THREE.Mesh(new THREE.CircleGeometry(8.1,40),new THREE.MeshBasicMaterial({color:0x111111,transparent:true,opacity:.1,side:THREE.DoubleSide,depthWrite:false}));disc.rotation.x=-Math.PI/2;disc.position.set(0,3.76,.15);g.add(disc);
+ // tail fin (swept), stabilator, tail rotor
+ const fs=new THREE.Shape();fs.moveTo(0,0);fs.lineTo(-1.1,1.95);fs.lineTo(-1.62,1.95);fs.lineTo(-1.05,0);fs.lineTo(-.6,-.2);fs.lineTo(0,0);
+ const fin=new THREE.Mesh(new THREE.ExtrudeGeometry(fs,{depth:.16,bevelEnabled:true,bevelThickness:.04,bevelSize:.04,bevelSegments:1}),paint);fin.rotation.y=-Math.PI/2;fin.position.set(-.08,2.45,-9.2);fin.castShadow=true;g.add(fin);
+ const st=new THREE.Shape();st.moveTo(-2.15,0);st.lineTo(2.15,0);st.lineTo(2.05,.75);st.lineTo(-2.05,.75);st.lineTo(-2.15,0);const stab=new THREE.Mesh(new THREE.ExtrudeGeometry(st,{depth:.06,bevelEnabled:false}),paint);stab.rotation.x=Math.PI/2;stab.position.set(0,2.32,-9.15);g.add(stab);
+ const tr=new THREE.Group();tr.position.set(.3,4.05,-10.55);tr.rotation.z=-.35;const th=cyl(.1,.1,.18,0x1a1a1a,8);th.rotation.z=Math.PI/2;tr.add(th);
+ for(let i=0;i<4;i++){const b=box(.03,1.4,.18,0x161718);b.rotation.x=i*Math.PI/4;tr.add(b);}const trw=new THREE.Group();trw.add(tr);g.add(trw);
+ // landing gear
+ [-1,1].forEach(sx=>{const sp=box(.08,.95,.1,0x1a1a1a);sp.position.set(sx*1.25,.82,2.25);sp.rotation.z=sx*.35;g.add(sp);const dr=box(.08,.08,.9,0x1a1a1a);dr.position.set(sx*1.05,.75,2.6);dr.rotation.x=.3;g.add(dr);
+  const wh=wheel(.3,.2);wh.position.set(sx*1.45,0,2.25);g.add(wh);});
+ const tw=wheel(.2,.12);tw.position.set(0,0,-8.6);g.add(tw);const tws=box(.07,1.9,.07,0x1a1a1a);tws.position.set(0,1.2,-8.6);tws.rotation.x=.25;g.add(tws);
+ // details: wire cutters, antennas, step, lights
+ const wc=box(.04,.4,.06,0x111111);wc.position.set(0,2.6,3.2);wc.rotation.x=-.5;g.add(wc);const wc2=box(.04,.35,.06,0x111111);wc2.position.set(0,.65,3.6);wc2.rotation.x=.6;g.add(wc2);
+ const an=box(.02,.35,.08,0x111111);an.position.set(0,.55,-.8);g.add(an);[-1,1].forEach(sx=>{const stp=box(.08,.04,.4,0x2a2a2a);stp.position.set(sx*1.25,.82,.9);g.add(stp);});
+ const nav=new THREE.Mesh(new THREE.SphereGeometry(.05,6,4),new THREE.MeshBasicMaterial({color:0xff2020}));nav.position.set(-1.25,2.3,2.0);g.add(nav);const nav2=nav.clone();nav2.material=new THREE.MeshBasicMaterial({color:0x20ff40});nav2.position.x=1.25;g.add(nav2);
+ // markings
+ [1,-1].forEach(s=>{const t=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.42),new THREE.MeshBasicMaterial({map:TEX.jandarma,transparent:true,depthWrite:false}));t.position.set(s*.29,2.48,-6.4);t.rotation.y=s*Math.PI/2;t.scale.x=.9;g.add(t);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(.6,.4),new THREE.MeshPhongMaterial({map:TEX.flag,side:THREE.DoubleSide}));fl.position.set(s*.16,3.2,-9.95);fl.rotation.y=s*Math.PI/2;g.add(fl);});
+ const reg=textTex('J-17512',256,48,'bold 34px Arial','#d8d8d0',null);[1,-1].forEach(s=>{const r=new THREE.Mesh(new THREE.PlaneGeometry(1.1,.2),new THREE.MeshBasicMaterial({map:reg,transparent:true,depthWrite:false}));r.position.set(s*1.222,1.35,-2.3);r.rotation.y=s*Math.PI/2;g.add(r);});
+ g.traverse(o=>{if(o.isMesh&&o.material!==glass)o.castShadow=true;});
+ return{g,rotor,tr,disc,door};}
+
 
 TEX.rope=canvasTex(8,64,(x,w,h)=>{for(let i=0;i<8;i++){x.fillStyle=i%2?'#3a3022':'#6a5a3e';x.fillRect(0,i*8,w,8);}});TEX.rope.wrapS=TEX.rope.wrapT=THREE.RepeatWrapping;TEX.rope.repeat.set(1,40);
 function heliInterior(h){
