@@ -453,6 +453,7 @@ TEX.shemagh=canvasTex(64,64,(x,w,h)=>{x.fillStyle='#b8a888';x.fillRect(0,0,w,h);
 MATS.shemagh=new THREE.MeshLambertMaterial({map:TEX.shemagh});
 TEX.denim=canvasTex(32,32,(x,w,h)=>{x.fillStyle='#1d2636';x.fillRect(0,0,w,h);for(let i=0;i<60;i++){x.fillStyle=Math.random()<.5?'#26324a':'#171e2b';x.fillRect(Math.random()*w,Math.random()*h,2,1);}});
 MATS.denim=new THREE.MeshLambertMaterial({map:TEX.denim});
+TEX.unit=canvasTex(64,64,(x,w,h)=>{x.fillStyle='#c9a54a';x.beginPath();x.arc(32,32,31,0,7);x.fill();x.strokeStyle='#3a2a10';x.lineWidth=4;x.beginPath();x.arc(32,32,24,0,7);x.stroke();x.fillStyle='#3a2a10';star(x,32,32,12,5,-Math.PI/2);});
 function textTex(txt,w,h,font,col,bg){return canvasTex(w,h,(x)=>{if(bg){x.fillStyle=bg;x.fillRect(0,0,w,h);}x.fillStyle=col;x.font=font;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,w/2,h/2);});}
 TEX.jandarma=textTex('JANDARMA',512,96,'bold 70px Arial','#f2f2f2',null);
 TEX.jandarmaDark=textTex('JANDARMA',512,96,'bold 70px Arial','#111',null);
@@ -571,7 +572,15 @@ function makeHuman(o){
  const torso=box(.46,.62,.26,o.uni);torso.position.y=.31;up.add(torso);
  if(o.vest){const v=box(.5,.44,.33,o.vest);v.position.y=.36;up.add(v);const p=box(.42,.14,.08,o.vest2||o.vest);p.position.set(0,.22,.18);up.add(p);}
  const head=box(.21,.24,.23,o.mask||o.skin);head.position.y=.79;up.add(head);
- if(o.helmet){const hm=box(.28,.15,.3,o.helmet);hm.position.y=.95;up.add(hm);const hm2=box(.3,.06,.32,o.helmet);hm2.position.y=.88;up.add(hm2);const ng=box(.07,.07,.05,0x111111);ng.position.set(0,.98,.17);up.add(ng);}
+ if(o.joh){const hm=new THREE.Mesh(new THREE.SphereGeometry(.165,16,10,0,Math.PI*2,0,Math.PI*.55),lam(o.helmet));hm.scale.set(1,.95,1.12);hm.position.y=.85;hm.castShadow=true;up.add(hm);
+  [-1,1].forEach(sx=>{const r=box(.02,.04,.18,0x0c0c0c);r.position.set(sx*.162,.88,0);up.add(r);const ec=cyl(.055,.055,.05,0x202022,12);ec.rotation.z=Math.PI/2;ec.position.set(sx*.13,.79,0);up.add(ec);});
+  const nv=box(.07,.05,.04,0x0c0c0c);nv.position.set(0,.96,.17);up.add(nv);const gl=box(.21,.05,.03,0x050608);gl.position.set(0,.835,.12);up.add(gl);const ln=box(.17,.035,.01,0x2a3a4a);ln.position.set(0,.835,.137);up.add(ln);
+  const pc=box(.46,.42,.09,o.jvest);pc.position.set(0,.4,.165);up.add(pc);const bk=box(.46,.44,.08,o.jvest);bk.position.set(0,.4,-.16);up.add(bk);const cb=box(.52,.15,.36,o.jvest);cb.position.y=.17;up.add(cb);
+  [-1,1].forEach(sx=>{const st=box(.09,.05,.36,o.jvest);st.position.set(sx*.15,.63,0);up.add(st);});for(let i=-1;i<=1;i++){const mp=box(.11,.15,.07,0x1c1e22);mp.position.set(i*.13,.3,.245);up.add(mp);}
+  const ad=box(.24,.1,.05,0x1c1e22);ad.position.set(0,.53,.225);up.add(ad);const rad=box(.06,.15,.05,0x0a0a0a);rad.position.set(.19,.5,.22);up.add(rad);const ant=box(.012,.2,.012,0x0a0a0a);ant.position.set(.19,.68,.22);up.add(ant);
+  const bt=new THREE.Mesh(new THREE.PlaneGeometry(.38,.07),new THREE.MeshBasicMaterial({map:TEX.jandarma,transparent:true}));bt.position.set(0,.5,-.201);bt.rotation.y=Math.PI;up.add(bt);
+  const belt=box(.5,.07,.3,0x0d0d0e);belt.position.y=.03;up.add(belt);}
+ else if(o.helmet){const hm=box(.28,.15,.3,o.helmet);hm.position.y=.95;up.add(hm);const hm2=box(.3,.06,.32,o.helmet);hm2.position.y=.88;up.add(hm2);const ng=box(.07,.07,.05,0x111111);ng.position.set(0,.98,.17);up.add(ng);}
  if(o.goggles){const gg=box(.22,.07,.04,0x050505);gg.position.set(0,.84,.125);up.add(gg);}
  if(o.plate){const pc=box(.44,.4,.1,o.plate);pc.position.set(0,.4,.16);up.add(pc);const bk=box(.44,.4,.08,o.plate);bk.position.set(0,.4,-.15);up.add(bk);
   const cb=box(.5,.14,.34,o.plate);cb.position.y=.16;up.add(cb);[-1,1].forEach(sx=>{const st=box(.08,.05,.34,o.plate);st.position.set(sx*.15,.62,0);up.add(st);});
@@ -584,9 +593,13 @@ function makeHuman(o){
  if(o.blind){const bf=box(.23,.05,.25,0xdddddd);bf.position.y=.83;up.add(bf);}
  const armL=limb(.13,.62,.14,o.uni),armR=limb(.13,.62,.14,o.uni);armL.position.set(-.3,.58,0);armR.position.set(.3,.58,0);
  [armL,armR].forEach(a=>{const gl=box(.12,.1,.12,o.glove||o.skin);gl.position.y=-.64;a.add(gl);});up.add(armL,armR);
+ if(o.joh){const up2=new THREE.Mesh(new THREE.CircleGeometry(.055,16),new THREE.MeshLambertMaterial({map:TEX.unit}));up2.position.set(.066,-.13,0);up2.rotation.y=Math.PI/2;armR.add(up2);
+  [legL,legR].forEach(l=>{const kp=box(.19,.14,.07,0x0b0b0c);kp.position.set(0,-.48,.11);l.add(kp);});const hol=box(.07,.2,.13,0x0b0b0c);hol.position.set(.1,-.22,0);legR.add(hol);}
  if(o.flag){const f=new THREE.Mesh(new THREE.PlaneGeometry(.11,.075),new THREE.MeshLambertMaterial({map:TEX.flag}));f.position.set(-.066,-.12,0);f.rotation.y=-Math.PI/2;armL.add(f);}
  let gun=null,muz=new THREE.Object3D();
- if(o.gun){gun=new THREE.Group();const len=o.gun==='pkm'?1.1:o.gun==='pistol'?.22:o.gun==='svd'?1.2:.85;
+ if(o.gunDef){gun=new THREE.Group();const gm=buildGunModel(o.gunDef);gm.g.rotation.y=Math.PI;gun.add(gm.g);gm.muzzle.getWorldPosition(muz.position);muz.position.z=o.gunDef.len*.83;gun.add(muz);
+  if(o.gunDef.cat==='PST'){gun.position.set(.12,.33,.42);armR.rotation.x=-1.45;armL.rotation.x=-1.4;armL.rotation.z=-.35;armR.rotation.z=.25;}else{gun.position.set(.12,.38,.12);armR.rotation.x=-1.15;armR.rotation.z=.1;armL.rotation.x=-1.35;armL.rotation.z=-.55;}up.add(gun);}
+ else if(o.gun){gun=new THREE.Group();const len=o.gun==='pkm'?1.1:o.gun==='pistol'?.22:o.gun==='svd'?1.2:.85;
   const r=box(.06,.09,len,0x1a1a1a);r.position.z=len/2-.15;gun.add(r);
   if(o.gun!=='pistol'){const st=box(.05,.1,.25,o.gun==='ak'||o.gun==='svd'?0x5a3a20:0x1a1a1a);st.position.set(0,-.03,-.25);gun.add(st);const mg=box(.04,.16,.07,0x222222);mg.position.set(0,-.1,.12);mg.rotation.x=o.gun==='ak'?.3:0;gun.add(mg);
    if(o.gun==='ar'){const hg=box(.075,.08,.3,0x1a1a1a);hg.position.set(0,.005,.33);gun.add(hg);const ch=box(.03,.05,.12,0x1a1a1a);ch.position.set(0,.07,-.02);gun.add(ch);const mw=box(.05,.06,.07,0x1a1a1a);mw.position.set(0,-.06,.1);gun.add(mw);}
@@ -601,7 +614,7 @@ function makeHuman(o){
  return {root,body,hips,up,legL,legR,armL,armR,gun,muz,shield};
 }
 const UNI={
- ally:{uni:0x1a1c20,vest:0x22252b,vest2:0x2c3036,skin:0xc89a78,mask:0x101113,helmet:0x18191d,goggles:1,glove:0x0e0e0f,flag:1},
+ ally:{uni:0x15171a,jvest:0x1b1d21,skin:0xc89a78,mask:0x0f1012,helmet:0x16171a,joh:1,glove:0x0b0b0c,flag:1},
  enemy:()=>({uni:pick([0x141518,0x1a1b1f,0x22231f]),legs:pick([MATS.denim,MATS.denim,0x2b2f25,0x1c1d20]),plate:pick([MATS.multicam,MATS.multicam,0x4b4a36]),skin:pick([0xb88c66,0xa57b58,0xc49a74]),mask:0x0d0d0f,bala:1,glove:0x111111}),
 };
 
@@ -623,7 +636,7 @@ function spawnEnemy(x,z,o={}){
  h.root.rotation.y=e.yaw;if(e.crouch)setCrouch(e,true);
  W.enemies.push(e);W.hittables.push(e);return e;}
 function spawnAlly(name,role,x,z){
- const o=Object.assign({},UNI.ally,{gun:role==='shield'?'pistol':role==='mg'?'pkm':'rifle',shield:role==='shield'});
+ const wn=role==='shield'?'Canik TP9 SF Elite':role==='mg'?'MKE PMT-76':role==='medic'?'MKE MPT-55':'MKE MPT-76';const o=Object.assign({},UNI.ally,{gunDef:WEAPONS.find(w=>w.name===wn),shield:role==='shield'});
  const h=makeHuman(o);const y=groundAt(x,z,terrainH(x,z));h.root.position.set(x,y,z);W.group.add(h.root);
  const a={kind:'ally',name,role,m:h,pos:V3(x,y,z),yaw:0,hp:140,maxHp:140,hipY:.9,downed:false,target:null,react:0,burst:0,shotCD:0,percT:rand(0,.3),walk:0,stuck:0,crouch:false,
   dmg:role==='shield'?24:role==='mg'?30:role==='sniper'?80:32,rate:role==='mg'?.085:role==='shield'?.3:.12,burstN:role==='mg'?[5,8]:role==='shield'?[2,3]:[3,4],healCD:15,talkCD:0};
