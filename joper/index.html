@@ -588,7 +588,7 @@ function makeHuman(o){
  return {root,body,hips,up,legL,legR,armL,armR,gun,muz,shield};
 }
 const UNI={
- ally:{uni:MATS.camo,vest:0xa8936c,vest2:0x8f7b58,skin:0xc89a78,mask:0xb3a283,helmet:0xb59f78,goggles:1,glove:0x8a7a5a,flag:1},
+ ally:{uni:0x1a1c20,vest:0x22252b,vest2:0x2c3036,skin:0xc89a78,mask:0x101113,helmet:0x18191d,goggles:1,glove:0x0e0e0f,flag:1},
  enemy:()=>({uni:pick([0x5d5845,0x6a614a,0x4f5240,0x5a5040]),vest:pick([0x3c3a2c,0x46402e,0x2e2f26]),skin:pick([0xb88c66,0xa57b58,0xc49a74]),scarf:pick([0x8a7c66,0x2a2a2a,0x6b5f4f,0x7a2a2a]),wrap:pick([0x2a2a2a,0x5b5040,0x7b6f5e]),glove:0x8a6a50}),
 };
 
@@ -720,7 +720,7 @@ function buildGunModel(def){
  if(def.sup){const s=cyl(.02,.02,.18,0x111111,10);s.rotation.x=Math.PI/2;add(s,0,.01,-L*.83-.09);}
  const mz=new THREE.Object3D();mz.position.set(0,.01,-L*.83-(def.sup?.18:0));g.add(mz);return{g,sightY,muzzle:mz};
 }
-function armMesh(){const g=new THREE.Group();const sl=box(.075,.075,.34,MATS.camo);sl.position.z=.17;g.add(sl);const gl=box(.07,.07,.09,0x7a6a4c);gl.position.z=-.03;g.add(gl);g.children.forEach(m=>m.castShadow=false);return g;}
+function armMesh(){const g=new THREE.Group();const sl=box(.075,.075,.34,0x1a1c20);sl.position.z=.17;g.add(sl);const gl=box(.07,.07,.09,0x0e0e0f);gl.position.z=-.03;g.add(gl);g.children.forEach(m=>m.castShadow=false);return g;}
 function buildVM(){
  if(VM.group)vmRoot.remove(VM.group);const g=new THREE.Group();VM.group=g;vmRoot.add(g);VM.muzzle=null;VM.shield=null;VM.flash=null;
  const flashM=new THREE.Mesh(new THREE.PlaneGeometry(.18,.18),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(x)=>{const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,240,200,1)');gr.addColorStop(.3,'rgba(255,190,90,.9)');gr.addColorStop(1,'rgba(255,120,30,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);}),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
