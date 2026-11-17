@@ -1228,6 +1228,26 @@ function heliInterior(h){
  [[-.72,-1.65],[-.72,-1.1],[-.72,-.55],[-.72,0],[-.72,.55],[.72,-1.65],[.72,-1.1]].forEach(([x,z],i)=>{const m=makeHuman(Object.assign({},UNI.ally,{gunDef:gd}));m.root.position.set(x,.62,z);m.root.rotation.y=x<0?Math.PI/2:-Math.PI/2;
   m.hips.position.y=.55;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;m.armL.rotation.z=-.2;m.up.rotation.x=.05;g.add(m.root);});
  g.traverse(o=>{if(o.isMesh)o.castShadow=false;});return g;}
+TEX.diamond=canvasTex(64,64,(x,w,h)=>{x.fillStyle='#b9a27e';x.fillRect(0,0,w,h);x.fillStyle='#d8c49e';for(let r=0;r<8;r++)for(let c=0;c<8;c++){x.save();x.translate(c*8+((r%2)*4)+2,r*8+4);x.rotate(r%2?.7:-.7);x.fillRect(-3,-.8,6,1.6);x.restore();}});TEX.diamond.wrapS=TEX.diamond.wrapT=THREE.RepeatWrapping;
+TEX.seatlogo=canvasTex(32,32,(x)=>{x.fillStyle='#f4f0e8';x.beginPath();x.arc(16,16,15,0,7);x.fill();x.strokeStyle='#a01822';x.lineWidth=3;x.beginPath();x.arc(16,16,11,0,7);x.stroke();x.fillStyle='#a01822';x.fillRect(11,10,10,12);});
+function vehInterior(v){
+ v.exterior=v.g.children.slice();const g=new THREE.Group();v.g.add(g);const hw=v.Wd/2-.14,fy=Math.max(.75,v.H*.32),cy=v.H*.97,z0=-v.L/2+.12,z1=v.L*.22,L=z1-z0,zc=(z0+z1)/2,olive=0x6f7340,mint=0x9fd6bf,dark=0x2a2d30;
+ const pl=(w,hh,col,x,y,z,ry,rx,map)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,hh),new THREE.MeshPhongMaterial({color:col,side:THREE.DoubleSide,shininess:map===TEX.diamond?30:8,map:map||null}));m.position.set(x,y,z);if(ry)m.rotation.y=ry;if(rx)m.rotation.x=rx;g.add(m);return m;};
+ const fl=pl(hw*2,L,0x9a8466,0,fy,zc,0,-Math.PI/2,TEX.diamond);fl.material.map=TEX.diamond.clone();fl.material.map.needsUpdate=true;fl.material.map.repeat.set(3,6);
+ pl(hw*2,L,dark,0,cy,zc,0,Math.PI/2);pl(L,cy-fy,0x3a3e40,-hw,(fy+cy)/2,zc,Math.PI/2);pl(L,cy-fy,0x3a3e40,hw,(fy+cy)/2,zc,-Math.PI/2);pl(hw*2,cy-fy,dark,0,(fy+cy)/2,z1,Math.PI);
+ const win=box(hw*1.3,.45,.03,0x22323c);win.position.set(0,cy-.45,z1-.02);g.add(win);for(let i=-3;i<=3;i++){const b=box(.02,.45,.04,0x111111);b.position.set(i*hw*.18,cy-.45,z1-.04);g.add(b);}
+ const rail=box(hw*1.2,.08,.25,0x5a5e62);rail.position.set(0,cy-.06,z1-.6);g.add(rail);for(let i=0;i<3;i++){const l=new THREE.Mesh(new THREE.BoxGeometry(.18,.02,.08),new THREE.MeshBasicMaterial({color:0xf0f2f6}));l.position.set(-.35+i*.35,cy-.11,z1-.6);g.add(l);}
+ for(let z=z0+.6;z<z1-.4;z+=.9){const hd=box(.22,.04,.04,0x8a8e90);hd.position.set(-hw*.55,cy-.05,z);g.add(hd);const hd2=hd.clone();hd2.position.x=hw*.55;g.add(hd2);}
+ const nz=Math.max(2,Math.floor((L-1.0)/.62));
+ const seat=(sx,z,taken)=>{const x=sx*(hw-.32);const base=box(.4,.22,.42,mint);base.position.set(x,fy+.11,z);g.add(base);const cu=box(.44,.14,.46,olive);cu.position.set(x,fy+.42,z);g.add(cu);
+  const bk=box(.14,.62,.46,olive);bk.position.set(x+sx*.26,fy+.8,z);g.add(bk);const hr=box(.16,.2,.42,olive);hr.position.set(x+sx*.24,fy+1.22,z);hr.rotation.z=sx*.15;g.add(hr);
+  const ft=box(.36,.06,.4,0x4a4e52);ft.position.set(x-sx*.05,fy+.04,z);g.add(ft);
+  [-1,1].forEach(k=>{const st=box(.02,.6,.04,0x111111);st.position.set(x+sx*.18,fy+.8,z+k*.13);g.add(st);});const lg=new THREE.Mesh(new THREE.CircleGeometry(.05,14),new THREE.MeshBasicMaterial({map:TEX.seatlogo}));lg.position.set(x+sx*.185,fy+.95,z);lg.rotation.y=sx>0?-Math.PI/2:Math.PI/2;g.add(lg);
+  if(taken&&v.type!=='minibus'&&false){const m=makeHuman(Object.assign({},UNI.ally,{gunDef:WEAPONS.find(w=>w.name==='MKE MPT-76')}));m.root.position.set(x-sx*.02,fy-.04,z);m.root.rotation.y=sx<0?Math.PI/2:-Math.PI/2;m.hips.position.y=.5;m.legL.rotation.x=m.legR.rotation.x=-1.05;m.gun.rotation.x=-1.45;m.gun.position.set(.05,.2,.32);m.armR.rotation.x=-.75;m.armL.rotation.x=-.95;g.add(m.root);}};
+ for(let i=0;i<nz;i++){const z=z0+.75+i*.62;[-1,1].forEach(sx=>seat(sx,z,i>=nz-2&&!(sx>0&&i===nz-1)));}
+ const con=box(.5,.7,.35,mint);con.position.set(0,fy+.35,z1-.35);g.add(con);const scr=box(.34,.26,.05,0xdde2e4);scr.position.set(0,fy+.95,z1-.4);g.add(scr);const sc=new THREE.Mesh(new THREE.PlaneGeometry(.26,.18),new THREE.MeshBasicMaterial({color:0x5a7a8a}));sc.position.set(0,fy+.95,z1-.43);sc.rotation.y=Math.PI;g.add(sc);
+ const lt=new THREE.PointLight(0xfff4e8,.9,6,2);lt.position.set(0,cy-.3,zc);g.add(lt);
+ g.traverse(o=>{if(o.isMesh)o.castShadow=false;});v.inside={fy,z0,z1};return g;}
 function ropeHands(){const mk=()=>{const g=new THREE.Group();const gl=box(.075,.08,.06,0x0b0b0c);gl.position.z=.04;g.add(gl);for(let f=0;f<4;f++){const fg=box(.016,.019,.07,0x111113);fg.position.set(-.028+f*.019,.03-f*.006,-.02);g.add(fg);}const sl=box(.07,.07,.32,0x15171a);sl.position.z=.23;g.add(sl);const th=box(.022,.03,.05,0x0b0b0c);th.position.set(.045,.0,-.01);g.add(th);g.traverse(o=>{if(o.isMesh)o.castShadow=false;});W.group.add(g);return g;};return[mk(),mk()];}
 // ================= CINEMATIC INSERTION =================
 let CINE=null;
@@ -1240,7 +1260,7 @@ function startCine(m,veh){
   radio('Pilot','Kartal Timi, hedef bölgeye iki dakika. Hazırlanın.',4);
   setTimeout(()=>G.state==='cine'&&radio('Kartal-1','Tim, teçhizat kontrolü! Silahlar emniyette, halat hazır.',4),3000);
   setTimeout(()=>G.state==='cine'&&radio('Pilot','İniş bölgesi üzerindeyiz. Halat aşağı! Halat aşağı!',3),8500);}
- else{const v=buildVehicle(veh);W.group.add(v.g);W.vehObj=v;const road=m.road||[V3(lz.x+app.x*120,0,lz.z+app.z*120),lz.clone()];
+ else{const v=buildVehicle(veh);W.group.add(v.g);W.vehObj=v;vehInterior(v);const road=m.road||[V3(lz.x+app.x*120,0,lz.z+app.z*120),lz.clone()];
   CINE={type:'ground',v,road,t:0,dur:11,lz,len:0};let L=0;for(let i=1;i<road.length;i++)L+=road[i].distanceTo(road[i-1]);CINE.len=L;
   loopStart('engine','engine');loopVol('engine',1);radio('Sürücü','Kartal Timi, hedefe intikal ediyoruz. Kemerler bağlı kalsın.',4);
   setTimeout(()=>G.state==='cine'&&radio('Kartal-1','Tim, iner inmez dağınık düzen. Kalkancı önde!',4),3500);
@@ -1271,7 +1291,9 @@ function updateCine(dt){const C=CINE;if(!C)return;C.t+=dt;const t=C.t;
   p.y=(gF+gB)/2;const pitch=-Math.atan2(gF-gB,4);v.g.position.copy(p);v.g.rotation.set(0,yaw,0);v.g.rotateX(pitch);v.g.position.y+=Math.sin(t*13)*.02*(k<1?1:0);
   const sp=k<1?C.len/(C.dur-2.5):0;v.wheels.forEach(w=>w.rotation.x+=sp*dt/0.6);v.g.updateMatrixWorld(true);
   if(t<C.dur-2.2){const half=(C.dur-2.2)*.55;let cam,look;
-   if(t<half){cam=V3(-1.2,v.H+2.2,-v.L-4.5).applyMatrix4(v.g.matrixWorld);look=V3(0,v.H*.6,8).applyMatrix4(v.g.matrixWorld);}
+   const insideNow=t<4.3;if(v.exterior&&v.extVis!==!insideNow){v.extVis=!insideNow;v.exterior.forEach(o=>o.visible=!insideNow);}
+   if(t<4.3){const I=v.inside;cam=V3(0,I.fy+1.2,I.z0+.2).applyMatrix4(v.g.matrixWorld);look=V3(0,I.fy+.85,I.z1+2).applyMatrix4(v.g.matrixWorld);}
+   else if(t<half+1){cam=V3(-1.2,v.H+2.2,-v.L-4.5).applyMatrix4(v.g.matrixWorld);look=V3(0,v.H*.6,8).applyMatrix4(v.g.matrixWorld);}
    else{const u=(t-half)/(C.dur-2.2-half);cam=V3(6.5,1.9,lerp(6,-4,u)).applyMatrix4(v.g.matrixWorld);look=V3(0,1.2,0).applyMatrix4(v.g.matrixWorld);}
    const gmin=terrainH(cam.x,cam.z)+.6;if(cam.y<gmin)cam.y=gmin;camera.position.copy(cam);camera.lookAt(look);G.shake=Math.max(G.shake,k<1?.05+Math.random()*.03:.02);}
   else{const kk=clamp((t-(C.dur-2.2))/1.4,0,1);const a=V3(0,v.H*.7,-v.L*.3).applyMatrix4(v.g.matrixWorld);const b=V3(0,0,-v.L/2-1.6).applyMatrix4(v.g.matrixWorld);b.y=terrainH(b.x,b.z)+1.66;camera.position.copy(a.lerp(b,kk));
