@@ -1602,14 +1602,14 @@ function buildCity(){
  const blocks=[[-25,-60,26,22,15],[25,-62,24,20,12],[-28,25,22,30,18],[-28,95,26,26,12],[28,95,22,24,21],[-60,-60,24,22,24],[60,25,24,30,9],[60,-62,22,20,15]];
  blocks.forEach(([x,z,w,d,h])=>blockBuilding(x,z,w,d,h,pick([0xffffff,0xe8dcc8,0xd8d0c8,0xf0e0d0])));
  // target block: two enterable houses + courtyard at (28,20)
- const A=building({x:22,z:12,w:12,d:10,h:3.2,y:0,col:0xd6cbb6,inCol:0xe0d6c4,roofCol:0x6a5a4a,floor:0x7a6a5a,doors:[{side:'w',at:5,locked:true,id:'A'}],inner:[{x1:-6,z1:0,x2:2,z2:0,door:{at:4}},{x1:2,z1:-5,x2:2,z2:5,door:{at:7.5,locked:true,id:'Ah'}}]});
+ const A=building({x:22,z:12,w:12,d:10,h:3.2,y:0,col:0xd6cbb6,inCol:0xe0d6c4,roofCol:0x6a5a4a,floor:0x7a6a5a,doors:[{side:'w',at:7.5,locked:true,id:'A'}],inner:[{x1:-6,z1:0,x2:2,z2:0,door:{at:4}},{x1:2,z1:-5,x2:2,z2:5,door:{at:7.5,locked:true,id:'Ah'}}]});
  const Bh=building({x:22,z:34,w:10,d:9,h:3.2,y:0,col:0xc8bca6,roofCol:0x6a5a4a,doors:[{side:'w',at:2.2,locked:true,id:'B'}],inner:[{x1:-5,z1:0,x2:5,z2:0,door:{at:3}}]});
  wallSeg(16,5,16,7,0,2.2,.3,0x9a9488);wallSeg(16,17,16,29,0,2.2,.3,0x9a9488);
  [[-8,-10,0],[8,10,0],[-8,30,3.14],[8,-45,0],[-9,75,0]].forEach(([x,z,r])=>parkedCar(x,z,r,pick([0x2a2d31,0x8a8e92,0x7a2a22,0x2a4a7a,0xd8d8d0])));
  [[-7,-20],[7,0],[-7,20],[7,45],[-7,-50]].forEach(([x,z])=>{const p=cyl(.07,.09,6,0x444444,6);p.position.set(x,3,z);W.group.add(p);lampLight(x,6,z,0xffd8a0,1.2,20);});
  spawnDummy(-8,-2,false,1.4);spawnDummy(-9,44,false,0.2);spawnDummy(9,52,false,3);
  const hostA=spawnHostage(26,9,0);const hostB=spawnHostage(25,37,Math.PI);
- const eA=[spawnEnemy(18,15,{static:true,yaw:-1.6}),spawnEnemy(21,9,{static:true,yaw:-1.2}),spawnEnemy(25,15.5,{static:true,yaw:-1.6,crouch:true}),spawnEnemy(27,13,{static:true,yaw:-1.6})];
+ const eA=[spawnEnemy(19,16,{static:true,yaw:-1.6}),spawnEnemy(21,9,{static:true,yaw:-1.2}),spawnEnemy(25,15.5,{static:true,yaw:-1.6,crouch:true}),spawnEnemy(27,13,{static:true,yaw:-1.6})];
  const eB=[spawnEnemy(19,36,{static:true,yaw:-1.6}),spawnEnemy(24,32,{static:true,yaw:-1})];
  const street=[spawnEnemy(12,22,{patrol:[V3(12,0,22),V3(12,0,2),V3(12,0,42)],gun:'ar'}),spawnEnemy(14,48,{static:true,yaw:Math.PI,crouch:true})];
  const drop=V3(-2,0,-120);ammoCrate(3,-116);const exZ=zoneMarker(drop.x,drop.z,3.5);exZ.vis=false;
