@@ -138,9 +138,6 @@ body.cine #barTop,body.cine #barBot{transform:none}
 #dcmd .h{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:4px}
 #opticOver{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.92) 72%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:18vh}
 #opticOver span{font-family:var(--mono);font-size:13px;letter-spacing:.12em;color:#cfe;background:rgba(0,0,0,.5);padding:4px 10px}
-#wires{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:25;background:rgba(10,14,12,.95);border:1px solid var(--bad);padding:14px;font-family:var(--body);max-width:calc(100vw - 32px)}
-#wires .t{font-family:var(--mono);font-size:13px;letter-spacing:.16em;color:var(--bad)}
-#wires .h{font-size:14px;line-height:1.5;color:var(--muted)}#wires .h b{color:var(--fg)}
 #skip{cursor:pointer;pointer-events:auto}
 body.optic #objectives,body.optic #team,body.optic #weaponBox,body.optic #vitals,body.optic #minimap,body.optic #compass,body.optic #crosshair,body.optic #prompt,body.optic #marker{visibility:hidden}
 #rot{display:none}
@@ -224,7 +221,6 @@ body.cine #skip{display:block}
 <div id="skip">BOŞLUK — sahneyi geç</div>
 <div id="wheel"><div class="ring"></div><div class="ctr"><b>TELSİZ</b><span>fareyi kaydır · K bırak</span></div></div>
 <div id="droneHud" hidden></div><div id="marks"></div>
-<div id="wires" hidden></div>
 <div id="rot">Telefonu yan çevir</div>
 <div id="lockHint">Devam etmek için tıkla</div>
 
@@ -904,7 +900,6 @@ addEventListener('keydown',e=>{
  if(e.code==='KeyK'&&!e.repeat&&!P.downed){openWheel();return;}
  if(WH.open){const m=e.code.match(/^Digit(\d)$/);if(m){const d=+m[1];WH.sel=(d+9)%10;closeWheel(true);}if(e.code==='Escape')closeWheel(false);return;}
  if(DC.open){const m=e.code.match(/^Digit(\d)$/);if(m)pickDoorCmd(+m[1]-1);else if(e.code==='KeyQ'||e.code==='Escape')closeDoorMenu();return;}
- if(W.wires&&G.state==='play'){const m=e.code.match(/^Digit([1-4])$/);if(m){cutWire(+m[1]-1);return;}}
  if(W.optic&&G.state==='play'&&(e.code==='KeyO'||e.code==='KeyE')){endOptic();return;}
  if((G.state==='cine'||G.state==='ride')&&(e.code==='Space'||e.code==='Enter')){skipCine();return;}
  if(G.state==='drone'){if(e.code==='KeyU'||e.code==='Escape')endDrone();return;}
@@ -1360,7 +1355,7 @@ let M=null;// current mission runtime
 function startMission(id){
  P.climb=null;
  CINE=null;RIDE=null;W.alliesAboard=false;
- const def=MISSIONS.find(m=>m.id===id);G.sel.mission=id;clearWorld();teamHold=false;W.doorOp=null;W.optic=null;W.wires=null;W.medevac=null;W.laserDot=null;P.carry=null;DC.open=false;['dcmd','wires','opticOver'].forEach(k=>$(k).hidden=true);loopStop('medevac');G.plan=null;
+ const def=MISSIONS.find(m=>m.id===id);G.sel.mission=id;clearWorld();teamHold=false;W.doorOp=null;W.optic=null;W.medevac=null;W.laserDot=null;P.carry=null;DC.open=false;['dcmd','opticOver'].forEach(k=>$(k).hidden=true);loopStop('medevac');G.plan=null;
  G.stats={revives:0,shots:0,hits:0,kills:0,heads:0,teamKills:0,arrests:0,dmgTaken:0,allyDown:0,civHit:0,surrShot:0,reloads:0,rams:0,charges:0,time:0};
  Object.keys(G).forEach(k=>{if(k.startsWith('ram_')||k.startsWith('breach_'))delete G[k];});G.flashEvents=0;G.breaches=0;G.suppress=0;
  Object.assign(P,{light:false,downed:false,reviver:null,revives:3,hp:100,ar:100,dead:false,crouch:false,crouchT:0,aimT:0,flash:3,smoke:2,charge:def.id==='egitim'?3:2,med:2,nvg:false,recoilP:0,recoilY:0,kick:0,swing:0,healT:0,flashT:0,vel:V3(),burstLeft:0});
@@ -2297,10 +2292,10 @@ function genVillage(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,70,460);con
  const amb=[];if(c.convoy){[[-48,250],[50,200],[-45,140],[40,95]].forEach(([x,z],i)=>{for(let k=0;k<2;k++)rock(x+rand(-4,4),z+rand(-4,4),rand(.8,1.4));sandbags(x,z+2,2.8,0,.9);for(let k=0;k<3;k++)amb.push(spawnEnemy(x+rand(-3,3),z+rand(-2,1),{crouch:Math.random()<.5,leash:8,gun:k===0&&i%2?'pkm':null}));});}
  const drop=V3(0,0,dropZ);ammoCrate(4,dropZ-4);
  const obj=[];if(c.convoy)obj.push({text:'Yoldaki pusuyu taretten kır',optional:1,prog:PROG(amb),check:()=>allDead(amb)});host.forEach((h,i)=>obj.push(hostObj(h,i)));if(hvt)obj.push(...hvtObjs(hvt));
- obj.push(enemyObj(desert?'Hücre yapılanmasını çökert':'Köydeki militanları etkisiz hale getir',en,V3(0,0,0)));obj.push(exitObj(drop,host.length>0));const bomb=genBomb(c,hs,obj);
+ obj.push(enemyObj(desert?'Hücre yapılanmasını çökert':'Köydeki militanları etkisiz hale getir',en,V3(0,0,0)));obj.push(exitObj(drop,host.length>0));
  return{spawn:drop.clone(),firstLook:V3(0,0,0),lz:drop,approach:V3(0,0,1),extraction:drop,rideSpeed:c.convoy?9:8,road:roadPts.map(([x,z])=>V3(x,0,z)),
   intro:introFor(def,(host.length?'Rehine bilgisi var. ':'')+(hvt?'Kırmızı başlıklı hedef şahsı canlı yakalamaya çalışın. ':'')+'Evlerde siviller olabilir, teşhis etmeden ateş etmeyin.'+(SQ.length?' Destek timleri yolda.':'')),
-  obj,SQ,update(dt){updateSquads(SQ,dt);if(bomb)updateBomb(bomb,dt);}};}
+  obj,SQ,update(dt){updateSquads(SQ,dt);}};}
 // ---- MOUNTAIN
 function genMountain(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,80,520);const SQ=squadDefs(c.squads,60);
  const pos=[];const n=c.pos||3;for(let i=0;i<n;i++){const a=-Math.PI/2+(i-(n-1)/2)*.75+rand(-.15,.15),r=rand(85,130);pos.push([Math.cos(a)*r,150+Math.sin(a)*r]);}
@@ -2351,8 +2346,8 @@ function genCity(def){const c=def.cfg;setupEnv(G.sel.tod||def.tod,50,320);flatGr
  for(let i=-1;i<=2;i++){const p=cyl(.07,.09,6,0x444444,6);p.position.set(7,3,i*25);W.group.add(p);if(i%2===0)lampLight(7,6,i*25,0xffd8a0,1.1,20);}
  const SQ=squadDefs((c.squads||[]).map((q,i)=>Object.assign({road:[V3(i?200:-200,0,i?0:-55),V3(i?60:-8,0,i?0:-55),V3(i?40:0,0,i?0:-20)]},q)),30);
  const drop=V3(0,0,-40);ammoCrate(3,-36);const obj=[];host.forEach((h,i)=>obj.push(hostObj(h,i)));if(hvt)obj.push(...hvtObjs(hvt));if(snip.length)obj.push(enemyObj('Çatılardaki keskin nişancıları sustur',snip));
- obj.push(enemyObj('Hücre üyelerini etkisiz hale getir',en,V3(tb[0],0,tb[1])));obj.push(exitObj(drop,host.length>0));const bomb=genBomb(c,hs,obj);
- return{spawn:drop.clone(),firstLook:V3(tb[0],0,tb[1]),lz:drop,approach:V3(0,0,-1),extraction:drop,road:[V3(0,0,-200),V3(0,0,-110),V3(0,0,-46)],intro:introFor(def,'Mahallede siviller var. Çatılara dikkat!'),obj,SQ,update(dt){updateSquads(SQ,dt);if(bomb)updateBomb(bomb,dt);}};}
+ obj.push(enemyObj('Hücre üyelerini etkisiz hale getir',en,V3(tb[0],0,tb[1])));obj.push(exitObj(drop,host.length>0));
+ return{spawn:drop.clone(),firstLook:V3(tb[0],0,tb[1]),lz:drop,approach:V3(0,0,-1),extraction:drop,road:[V3(0,0,-200),V3(0,0,-110),V3(0,0,-46)],intro:introFor(def,'Mahallede siviller var. Çatılara dikkat!'),obj,SQ,update(dt){updateSquads(SQ,dt);}};}
 // ---- METRO
 // ---- METRO (train stopped in tunnel; pry doors, human step)
 const TDOORS=[];
@@ -2482,10 +2477,6 @@ const GEN=[
  ['kamp','Gece Kampı Baskını','Kamp',604,'gece','kirpi',genCamp,{tents:6,fire:7},'Ateş başındaki kampa gece baskını.'],
  ['konvoy','Vadi Yolu Konvoyu','Konvoy',701,'ogle','ejder',genVillage,{convoy:1,houses:5,R:26},'Taretten pusuyu kır, yol sonundaki köyü temizle.'],
  ['konvoy','Sınır Yolu Konvoyu','Konvoy',702,'sabah','kirpi',genVillage,{convoy:1,desert:1,houses:6,R:28,hvt:1},'Çöl yolunda konvoy ve sınır yerleşkesi.'],
- ['bomba','Saatli Bomba: Eski Çarşı','Bomba İmha',801,'aksam','minibus',genCity,{houses:4,bomb:420,snipers:1},'Çarşıdaki bir evde saatli bomba var. Hücreyi temizle, fünyeyi sök, doğru kabloyu kes.'],
- ['bomba','Köy Okulu Tehdidi','Bomba İmha',802,'sabah','kirpi',genVillage,{houses:9,bomb:480},'Köyde bir eve bomba yerleştirildi. Süre dolmadan bul ve etkisiz hale getir.'],
- ['bomba','Çöl Deposu','Bomba İmha',803,'ogle','ejder',genVillage,{desert:1,houses:8,bomb:420,hostage:1},'Çöldeki depoda rehine ve saatli bomba. Önce hangisine gideceğine sen karar ver.'],
- ['bomba','Liman Gece Bombası','Bomba İmha',804,'gece','minibus',genCity,{houses:5,bomb:480,hostage:1},'Gece limanda saatli bomba ve bir rehine.'],
  ['konvoy','Gece Konvoyu','Konvoy',703,'gece','cobra',genVillage,{convoy:1,houses:5,R:26,squads:[{veh:'ejder'}]},'Gece yolunda pusu, destek timiyle köy baskını.'],
 ];
 const GEN_MISSIONS=GEN.map(([type,name,cat,seed,tod,veh,fn,cfg,desc])=>({id:'g'+seed,name,place:cat+' · '+(['gece'].includes(tod)?'Gece':'Gündüz'),cat,seed,tod,defVeh:veh==='heli'?'heli':veh,build:fn,cfg,insertion:true,groundOnly:type==='konvoy',desc}));
@@ -2636,21 +2627,9 @@ function updateOptic(dt){const O=W.optic;if(!O)return;if(P.dead||P.downed||keys.
  for(const h of W.hostages){if(!h.dead&&h.pos.distanceTo(O.pos)<16&&los(eye,V3(h.pos.x,h.pos.y+1,h.pos.z),false)){if(!h.spotted)feed('Kamera: içeride rehine var!','#ffffff');h.spotted=true;}}}
 
 // ================= BOMB WIRES =================
-function openWires(bomb){W.wires=bomb;const labels=['FÜNYE','ZAMANLAYICI','PİL','SAHTE HAT'];const perm=[0,1,2,3].sort(()=>Math.random()-.5);bomb.perm=perm;bomb.labels=labels;
- const cols=['#d33','#36c','#e8c020','#3a3'];let svg=`<svg viewBox="0 0 440 250" style="width:440px;max-width:86vw;height:auto;display:block;margin:8px 0"><rect width="440" height="250" fill="#161916"/>`;
- for(let r=0;r<4;r++)svg+=`<rect x="330" y="${25+r*55}" width="104" height="36" fill="#2a2e2a" stroke="#555"/><text x="382" y="${48+r*55}" fill="#ddd" font-size="13" text-anchor="middle" font-family="monospace">${labels[r]}</text>`;
- for(let i=0;i<4;i++){const y1=43+i*55,y2=43+perm[i]*55;const c1=rand(10,240),c2=rand(10,240);svg+=`<path d="M60 ${y1} C 150 ${c1}, 240 ${c2}, 330 ${y2}" stroke="#000" stroke-width="11" fill="none" opacity=".5"/><path data-w="${i}" d="M60 ${y1} C 150 ${c1}, 240 ${c2}, 330 ${y2}" stroke="${cols[i]}" stroke-width="7" fill="none" style="cursor:pointer"/><circle cx="50" cy="${y1}" r="10" fill="${cols[i]}"/><text x="18" y="${y1+5}" fill="#fff" font-size="16" font-family="monospace">${i+1}</text>`;}
- svg+='</svg>';const el=$('wires');el.innerHTML=`<div class="t">FÜNYE AÇILDI · KABLO KES</div>${svg}<div class="h">EYP: <b>FÜNYE</b>ye giden kabloyu takip et ve onu kes. Yanlış kablo infilak ettirir!<br><span class="kbd">1</span>–<span class="kbd">4</span> ya da kabloya dokun · Kalan süre: <b id="wireT"></b></div>`;el.hidden=false;
- el.querySelectorAll('[data-w]').forEach(p=>p.addEventListener('click',()=>cutWire(+p.dataset.w)));radio('EYP','Kablolar açık. Fünyeye giden hattı takip et, sadece onu kes.',4);}
-function closeWires(){W.wires=null;$('wires').hidden=true;}
-function cutWire(i){const b=W.wires;if(!b)return;closeWires();noiseHit(4000,.05,.3,'highpass');
- if(b.perm[i]===0){b.defused=true;W.defuse=null;b.led.visible=false;G.stats.defused=(G.stats.defused||0)+1;radio('Kartal-1','Fünye hattı kesildi! Patlayıcı etkisiz!',4);tone(660,.12,.1);tone(990,.18,.1,'sine',1,.12);}
- else{bigBoom(b.pos,30);missionFail('YANLIŞ KABLO','Kestiğin kablo fünyeye değil '+b.labels[b.perm[i]]+' hattına gidiyordu. Kabloları baştan sona dikkatle takip et.');}}
-function updateBomb(bomb,dt){if(bomb.defused)return;bomb.left-=dt;bomb.led.visible=(G.time*(bomb.left<30?6:2))%1<.5;if(W.wires===bomb&&$('wireT'))$('wireT').textContent=FMT(bomb.left);
- if(W.defuse===bomb){if(nearP(bomb.pos,2.6)&&!P.dead&&!P.downed){if(bomb.t<6){bomb.t+=dt;centerMsg('FÜNYE KAPAĞI SÖKÜLÜYOR',Math.min(100,Math.round(bomb.t/6*100))+'%',.3);}else if(!W.wires)openWires(bomb);}else{W.defuse=null;bomb.t=0;if(W.wires===bomb)closeWires();feed('Fünye sökme yarıda kaldı');}}
- if(bomb.left<=0&&!bomb.defused){if(W.wires)closeWires();bigBoom(bomb.pos,30);missionFail('PATLAYICI İNFİLAK ETTİ','Süre doldu. Bombaya daha hızlı ulaş, fünyeyi zamanında sök.');}}
-function genBomb(c,hs,obj){if(!c.bomb)return null;const h=hs[Math.floor(hs.length/2)];const s=houseSpot(h)||[h.x,h.z];const y=groundAt(s[0],s[1],terrainH(s[0],s[1])+1.5);const b=bombDevice(s[0],s[1],y,c.bomb);
- obj.unshift({text:'Saatli bombayı bul, fünyeyi sök, doğru kabloyu kes',prog:()=>FMT(b.left),check:()=>b.defused,pos:V3(s[0],y,s[1])});return b;}
+function updateBomb(bomb,dt){if(bomb.defused)return;bomb.left-=dt;bomb.led.visible=(G.time*(bomb.left<30?6:2))%1<.5;
+ if(W.defuse===bomb){if(nearP(bomb.pos,2.6)&&!P.dead&&!P.downed){bomb.t+=dt;centerMsg('FÜNYE SÖKÜLÜYOR',Math.min(100,Math.round(bomb.t/6*100))+'%',.3);if(bomb.t>=6){bomb.defused=true;W.defuse=null;bomb.led.visible=false;radio('Kartal-1','Fünye söküldü! Patlayıcı etkisiz!',4);}}else{W.defuse=null;bomb.t=0;feed('Fünye sökme yarıda kaldı');}}
+ if(bomb.left<=0&&!bomb.defused){bigBoom(bomb.pos,30);missionFail('PATLAYICI İNFİLAK ETTİ','Süre doldu. Bir dahaki sefere atölyeye daha hızlı gir, fünyeyi zamanında sök.');}}
 
 // ================= CARRY / MEDEVAC =================
 function startCarry(a){P.carry=a;a.carried=true;selectSlot(2);radio('Kartal-1',a.name+', seni aldım! Dayan kardeşim!',2.5);if(!W.medevac)feed('[M] ile MEDEVAC çağır','#f2b83d');}
@@ -2717,7 +2696,7 @@ const STORY=[
  {m:'egitim',t:'Yeni Komutan',s:'Kartal Timi\'ne komutan olarak atandın.',b:'Kartal Timi\'nin yeni komutanı olarak Özel Harekat Eğitim Merkezi\'ne geldin. Timini tanı; koçbaşı, kapı şarjı, şok bombası ve kalkanla çalış.',a:'Eğitim bitti. Akşam olmadan bölge komutanlığından acil bir telefon geldi: köyde silah sevkiyatı ihbarı var.'},
  {m:'koy',t:'Köydeki Sevkiyat',s:'Muhbir köyde silah sevkiyatını bildirdi.',b:'Bir muhbir, köydeki bir evde silah sevkiyatı yapıldığını bildirdi. Şüphelileri mümkünse canlı yakala; ifadeleri sonraki adımı belirleyecek. Plan ekranında Bravo\'yu köyün diğer ucuna koy.',a:'Yakalanan şüphelinin telefonunda "Usta" diye kayıtlı bir numara çıktı. Sinyal Karakaya Köyü\'nü gösteriyor.'},
  {m:'g101',t:'Usta\'nın İzi',s:'Bomba ustası Karakaya Köyü\'nde.',b:'Kod adı "Usta" olan bomba ustası Karakaya Köyü\'ndeki evlerden birinde saklanıyor. Kırmızı başlıklı hedef şahsı canlı yakala. Kapılarda timine komut ver: Q.',a:'Usta konuştu: şehirdeki sanayi sitesinde bir atölyede düzenek hazırlanıyor ve bir tanesi kurulmuş durumda.'},
- {m:'atolye',t:'Atölye',s:'Kurulmuş bir patlayıcı, işleyen bir saat.',b:'Sanayi sitesindeki atölyede kurulu bir patlayıcı var ve saat işliyor. Atölyeye gir, fünye kapağını sök ve fünyeye giden doğru kabloyu kes.',a:'Atölyede ele geçirilen planlarda bir hücre evinin adresi ve bir tren saati yazıyor.'},
+ {m:'atolye',t:'Atölye',s:'Kurulmuş bir patlayıcı, işleyen bir saat.',b:'Sanayi sitesindeki atölyede kurulu bir patlayıcı var ve saat işliyor. Atölyeye gir, timini koru ve fünyeyi süre dolmadan sök.',a:'Atölyede ele geçirilen planlarda bir hücre evinin adresi ve bir tren saati yazıyor.'},
  {m:'g501',t:'Hücre Evi',s:'Mahallede rehine, çatılarda nişancı.',b:'Sanayi Mahallesi\'ndeki hücre evinde bir rehine tutuluyor. Çatılarda keskin nişancı var. Kapıya girmeden önce kapı altı kamerayla (O) içeriye bak.',a:'Hücre dağıtıldı ama iki kişi kaçtı: metroya indiler ve gece treninde rehine aldılar.'},
  {m:'g402',t:'Gece Treni',s:'Tünelde duran trende iki rehine.',b:'Tren tünelde durduruldu, vagonlarda iki rehine var. Kapıları hidrolik ayırıcıyla aç, birbirinizin sırtına basarak vagonlara çıkın, vagon vagon temizleyin.',a:'Kaçanlardan biri teslim oldu ve örgütün yöneticisi "Akrep"in Cudi\'deki bir mağarada olduğunu söyledi.'},
  {m:'magara',t:'Mağara',s:'Akrep\'in koruma ekibi Cudi\'de.',b:'Akrep\'in koruma ekibi Cudi\'deki mağarada. Vadideki mevzileri temizle, mağaraya gir. Yaralanan olursa sırtla ve MEDEVAC çağır (M).',a:'Mağarada Akrep yoktu. Telsiz kayıtları onun Kara Dağ\'daki son üsse geçtiğini gösteriyor.'},
@@ -2805,19 +2784,19 @@ function showDebrief(win,title,text){G.state='debrief';$('hud').hidden=true;loop
  const m=MISSIONS.find(x=>x.id===G.sel.mission);$('dbMission').textContent=m.name+' · '+DIFF[G.sel.diff].n;$('dbTitle').textContent=win?'Görev Başarılı':(title||'Görev Başarısız');$('dbTitle').style.color=win?'var(--fg)':'var(--bad)';
  $('dbStars').textContent=win?'★'.repeat(stars)+'☆'.repeat(3-stars):'';
  $('dbText').textContent=win?(stars===3?'Kusursuz operasyon. Tim eksiksiz döndü, sivil kayıp yok.':'Görev tamamlandı. Daha az hasar alarak, sivillere zarar vermeden ve isabetli atışla üç yıldız alabilirsin.'):(text||'');
- const parts=[[win?'Görev başarısı':'Katılım',win?500:100],['Etkisiz ('+s.kills+')',s.kills*50],['Kafa atışı ('+s.heads+')',s.heads*25],['Teslim alınan ('+s.arrests+')',s.arrests*120],['Tim desteği ('+s.teamKills+')',s.teamKills*10],['Kurtarılan rehine ('+hostSaved+')',hostSaved*200],['MEDEVAC ('+mev+')',mev*150],['Etkisiz bomba ('+dfz+')',dfz*300],['Yıldız bonusu',win?stars*250:0],['Sivil isabet ('+s.civHit+')',-s.civHit*300],['Şehit ('+kia+')',-kia*400]].filter(x=>x[1]);
+ const parts=[[win?'Görev başarısı':'Katılım',win?500:100],['Etkisiz ('+s.kills+')',s.kills*50],['Kafa atışı ('+s.heads+')',s.heads*25],['Teslim alınan ('+s.arrests+')',s.arrests*120],['Tim desteği ('+s.teamKills+')',s.teamKills*10],['Kurtarılan rehine ('+hostSaved+')',hostSaved*200],['MEDEVAC ('+mev+')',mev*150],['Yıldız bonusu',win?stars*250:0],['Sivil isabet ('+s.civHit+')',-s.civHit*300],['Şehit ('+kia+')',-kia*400]].filter(x=>x[1]);
  const xp0=store.get('xp',0);let gain=Math.max(0,parts.reduce((t,x)=>t+x[1],0));const xp1=xp0+gain;store.set('xp',xp1);const r0=rankIdx(xp0),r1=rankIdx(xp1);
  $('dbText').innerHTML=$('dbText').textContent+`<br><b style="color:var(--gold)">+${gain} puan</b> · Rütbe: ${RANKS[r1][0]}`+(r1>r0?`<br><b style="color:var(--ok)">TERFİ! ${RANKS[r1][0]} oldun — yeni avantaj: ${PERKS[r1]}</b>`:'');
  if(win)$('dbText').innerHTML+=`<div style="margin-top:10px;font-family:var(--mono);font-size:12px;line-height:1.7"><span style="color:var(--gold)">★</span> Görevi tamamla<br><span style="color:${c2?'var(--gold)':'var(--muted)'}">${c2?'★':'☆'}</span> İsabet en az %30 ve sivile isabet yok<br><span style="color:${c3?'var(--gold)':'var(--muted)'}">${c3?'★':'☆'}</span> 120'den az hasar, tim yaralanmadı${kia?'<br><span style="color:var(--bad)">Şehit verildiği için en fazla 1 yıldız</span>':''}</div>`;
  $('dbText').innerHTML+=`<div style="margin-top:8px;font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--muted)">${parts.map(x=>`${x[0]}: <b style="color:${x[1]<0?'var(--bad)':'var(--fg)'}">${x[1]>0?'+':''}${x[1]}</b>`).join(' · ')}</div>`;
  if(win&&G.story!=null&&STORY[G.story]&&STORY[G.story].m===G.sel.mission){const st=STORY[G.story];const pr=store.get('story',0);if(G.story+1>pr)store.set('story',G.story+1);$('dbText').innerHTML+=`<div style="margin-top:12px;border-left:3px solid var(--gold);padding-left:10px;color:var(--fg);font-size:15px"><b style="color:var(--gold)">HİKÂYE · Bölüm ${G.story+1}</b><br>${st.a}${STORY[G.story+1]?`<br><b style="color:var(--ok)">Sıradaki bölüm açıldı: ${STORY[G.story+1].t}</b>`:'<br><b style="color:var(--ok)">Hikâye tamamlandı!</b>'}</div>`;}
  const mm=Math.floor(s.time/60),ss=Math.floor(s.time%60);
- $('dbStats').innerHTML=[[`${mm}:${String(ss).padStart(2,'0')}`,'Süre'],[s.kills,'Senin etkisizleştirdiğin'],[s.teamKills,'Timin etkisizleştirdiği'],[s.arrests,'Kelepçelenen'],[acc+'%','İsabet oranı'],[s.heads,'Kafa atışı'],[Math.round(s.dmgTaken),'Alınan hasar'],[s.allyDown,'Yaralanan tim üyesi'],[s.civHit,'Sivil / rehine isabeti'],[s.revives+' / '+(P.maxRev||3),'Kullanılan can hakkı'],[s.marked||0,'Dronla işaretlenen'],[s.rams+s.charges,'Kırılan kapı'],[hostSaved,'Kurtarılan rehine'],[mev,'MEDEVAC tahliye'],[dfz,'Etkisiz bomba'],[kia,'Şehit']].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join('');
+ $('dbStats').innerHTML=[[`${mm}:${String(ss).padStart(2,'0')}`,'Süre'],[s.kills,'Senin etkisizleştirdiğin'],[s.teamKills,'Timin etkisizleştirdiği'],[s.arrests,'Kelepçelenen'],[acc+'%','İsabet oranı'],[s.heads,'Kafa atışı'],[Math.round(s.dmgTaken),'Alınan hasar'],[s.allyDown,'Yaralanan tim üyesi'],[s.civHit,'Sivil / rehine isabeti'],[s.revives+' / '+(P.maxRev||3),'Kullanılan can hakkı'],[s.marked||0,'Dronla işaretlenen'],[s.rams+s.charges,'Kırılan kapı'],[hostSaved,'Kurtarılan rehine'],[mev,'MEDEVAC tahliye'],[kia,'Şehit']].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join('');
  const keepStats=G.stats;toMenuWorld();G.stats=keepStats;G.state='debrief';showScreen('debrief');setupMenuCam();}
 
 // ================= MENU BACKDROP =================
 let menuT=0;
-function toMenuWorld(){clearWeather();document.body.classList.remove('optic');W.optic=null;W.doorOp=null;W.wires=null;['dcmd','wires','opticOver'].forEach(k=>$(k).hidden=true);DC.open=false;DR.active=false;$('droneHud').hidden=true;$('marks').innerHTML='';AIR.pending=null;try{speechSynthesis.cancel();}catch(e){}G.state='menu';M=null;CINE=null;RIDE=null;document.body.classList.remove('cine');$('hud').hidden=true;$('blackout').style.opacity=0;loopStopAll();P.nvg=false;canvas.style.filter='';$('nvgOver').style.display='none';
+function toMenuWorld(){clearWeather();document.body.classList.remove('optic');W.optic=null;W.doorOp=null;['dcmd','opticOver'].forEach(k=>$(k).hidden=true);DC.open=false;DR.active=false;$('droneHud').hidden=true;$('marks').innerHTML='';AIR.pending=null;try{speechSynthesis.cancel();}catch(e){}G.state='menu';M=null;CINE=null;RIDE=null;document.body.classList.remove('cine');$('hud').hidden=true;$('blackout').style.opacity=0;loopStopAll();P.nvg=false;canvas.style.filter='';$('nvgOver').style.display='none';
  clearWorld();buildMenuWorld();exitPointer();}
 function buildMenuWorld(){setupSky(false,0xb6c2c6,60,380,0x5a86c4,0xd2d8d8);setupLights(false);W.sun.position.set(60,80,30);
  const raw=(x,z)=>fbm(x*.008+4,z*.008+2,5)*70-22+Math.max(0,Math.hypot(x,z)-60)*.25;const H=(x,z)=>lerp(raw(x,z),raw(0,0)*0+0,smooth(45,25,Math.hypot(x,z)));
@@ -2853,6 +2832,6 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.
  clearWorld();buildMenuWorld();applyQuality();G.state='menu';showScreen('menu');$('loading').remove();loop();
  setupTouch();if(TOUCH){const n=document.querySelector('#scrMenu .note');n.innerHTML+='<br><b style="color:var(--gold)">Dokunmatik kontroller açık: sol altta yürüme çubuğu, ekranı kaydırarak bak. Telefonu yan çevir.</b>';}
  $('skip').addEventListener('click',()=>{if(G.state==='cine'||G.state==='ride')skipCine();});
- window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer,rayWorld,los,AIR,TDOORS,startDoorOp,startOptic,endOptic,callMedevac,startCarry,dropCarry,bravoGo,cutWire,nearDoor,STORY,showScreen,missionComplete};
+ window.JOPER={G,P,W,startMission,WEAPONS,MISSIONS,cine:()=>CINE,m:()=>M,hurtPlayer,rayWorld,los,AIR,TDOORS,startDoorOp,startOptic,endOptic,callMedevac,startCarry,dropCarry,bravoGo,nearDoor,STORY,showScreen,missionComplete};
 })();
 </script>
