@@ -1266,6 +1266,7 @@ function updateAllies(dt){
   const stackPose=!a.target&&a.role!=='shield'&&!a.squad;const m=a.m;
   if(stackPose){m.up.rotation.y=lerp(m.up.rotation.y,(i%2?-.55:.55),dt*6);m.lowReady(true);if(!m.stk){m.stk=1;ikArm(m.armL,m.foreL,V3(-.15,.62,.62),V3(-.6,-1,0));}m.up.rotation.x*=.9;}
   else if(a.role!=='shield'){m.up.rotation.y=lerp(m.up.rotation.y,0,dt*8);if(m.stk){m.stk=0;m.lr=null;}m.lowReady(false);if(a.target)aimAt(a,a.target.pos,dt);}
+  else{m.up.rotation.x*=Math.max(0,1-dt*6);m.up.rotation.y=lerp(m.up.rotation.y,0,dt*8);}
   if(a.target){const t=a.target;face=Math.atan2(t.pos.x-a.pos.x,t.pos.z-a.pos.z);if(a.react>0)a.react-=dt;else if(!(a.rl>0)){a.shotCD-=dt;if(a.shotCD<=0){if(a.burst<=0)a.burst=Math.round(rand(a.burstN[0],a.burstN[1]));allyShoot(a,t);a.burst--;a.shotCD=a.burst>0?a.rate:rand(.8,1.8);}}if(t.dead||t.surr)a.target=null;}
   a.yaw+=angDiff(a.yaw,face)*Math.min(1,dt*7);a.m.root.position.copy(a.pos);a.m.root.rotation.y=a.yaw;
   // medic
